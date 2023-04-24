@@ -103,10 +103,12 @@ class UtilizeManagement:
         for command in sql_file.split(";"):
             cursor.execute(command)
 
+
+
     def runapp(self):
         """
         
         """
 
 
-    
+                                
