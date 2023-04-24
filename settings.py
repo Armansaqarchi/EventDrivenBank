@@ -18,3 +18,5 @@ db = {
     "PASSWORD" : "test123123"
 }
 
+
+DDL_PATH = path.join(BASE_DIR, "core/DDL")
