@@ -15,10 +15,21 @@ class UtilizeManagement:
 
 
 
-    def help_text(self, commands_only = False):
+    def help_text(self, commands_only = False) -> str:
+        """stdout all the subcommands available"""
+
+
+        commands = "here are the list of <subcommands> available :\n"
         try:
-            only_commands = self.argv[2]
-            for command, _ in os.environ.items:
-                sys.stdout.write("")
+            if self.argv[2] == "--commands":
+                for command, _ in os.environ.items:
+                    commands.join("%s" + "\n" %command)
+            return commands
         except(IndexError):
+            pass
+
+            for command, description in os.environ.items:
+                    commands.join("%s     %s" %(command, description))
+
+        return commands
 
