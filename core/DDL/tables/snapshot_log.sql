@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS snapshot(
+    snapshot_id SERIAL PRIMARY KEY,
+    snapshot_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
