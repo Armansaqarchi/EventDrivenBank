@@ -26,7 +26,13 @@ CREATE OR REPLACE FUNCTION make_username ()
         END
     $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER IF username AFTER INSERT ON account FOR EACH ROW
+
+
+CREATE TRIGGER username AFTER INSERT ON account FOR EACH ROW
     EXECUTE FUNCTION make_username();
+
+
+CREATE TRIGGER balance AFTER INSERT ON account FOR EACH ROW
+    EXECUTE FUNCTION make_balance();
 
 
