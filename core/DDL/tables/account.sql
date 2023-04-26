@@ -39,6 +39,7 @@ AS $$
             SET hashed_password = encode(DIGEST(password, 'sha256'), 'hex');
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, interest_rate);
+            RETURN 'user successfully created, username : ' || username
         END IF;
     END;
 $$ LANGUAGE plpgsql 
