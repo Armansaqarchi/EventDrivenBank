@@ -34,7 +34,17 @@ class AppInput:
         """
         invokes input function and performs main operations
         """
-        choise = input(settings.MAIN_MENU)
+        choice = input(settings.MAIN_MENU)
+
+        if choice == 1:
+            # perform withdraw
+        
+        elif choice == 2:
+            # perform transfer
+
+        elif choice == 3:
+            sys.exit(0)
+
     
     def login_menu(self, *args) -> int:
         """
