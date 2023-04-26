@@ -1,4 +1,5 @@
 import sys
+import settings
 
 
 
@@ -27,6 +28,19 @@ class AppInput:
                 print(message)    
             else:
                 return choice
+    
+
+    def main_menu(self, *args) -> int:
+        """
+        invokes input function and performs main operations
+        """
+        choise = input(settings.MAIN_MENU)
+    
+    def login_menu(self, *args) -> int:
+        """
+        invokes input function and performs login operations
+        """
+        choice = input(settings.LOGIN_MENU)
 
     
             
