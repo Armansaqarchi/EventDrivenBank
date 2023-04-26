@@ -14,12 +14,17 @@ AS $$
     END;
 $$ LANGUAGE plpgsql;
 
+
+
 --this function adds the logged in username to the login log table
 CREATE FUNCTION login_log(username VARCHAR(50))
 AS $$
     BEGIN
     INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
     END;
+
+
+
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
@@ -37,16 +42,18 @@ AS $$
 $$ LANGUAGE plpgsql
 
 
-CREATE OF REPLACE PROCEDURE deposit(amount NUMERIC(18, 0))
+
+
+
+--creates a procedure responsible to make deposit events
+CREATE OF REPLACE PROCEDURE deposit(amount NUMERIC(18, 0), type STATUS)
 AS $$
+    
+    DECLARE transaction_time TIMESTAMP;
     DECLARE username VARCHAR(50);
-    DECLARE type STATUS := 'deposit'
     BEGIN
         username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
-
-
+        transaction_time := CURRENT_TIMESTAMP;
+        EXECUTE create_transaction(type, from, to, amount);
     END;
 $$ LANGUAGE plpgsql
-
-
-
