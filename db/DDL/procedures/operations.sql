@@ -40,9 +40,11 @@ $$ LANGUAGE plpgsql
 CREATE OF REPLACE PROCEDURE deposit(amount NUMERIC(18, 0))
 AS $$
     DECLARE username VARCHAR(50);
+    DECLARE type STATUS := 'deposit'
     BEGIN
         username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
-        
+
+
     END;
 $$ LANGUAGE plpgsql
 
