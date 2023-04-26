@@ -68,17 +68,14 @@ class UtilizeManagement:
         except IndexError:
             subcommand = "help"
 
-
         if subcommand == "startapp":
-            self.runapp()
-            
+            self.runapp()            
         
         elif subcommand == "help":
             self.help_text()
 
         elif subcommand == "performdb":
             self.create_schema()
-        
 
     def create_schema(self):
         """runs every sql command available in folder specified in setting"""
@@ -100,14 +97,13 @@ class UtilizeManagement:
         sql_file.close()
 
         cursor = self.connection.cursor()
-        for command in sql_file.split(";"):
+        for command in sql_commands.split(";"):
             cursor.execute(command)
 
-
-
-    def runapp(self):
         
 
+
+        
 
 
 

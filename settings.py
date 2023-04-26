@@ -20,3 +20,9 @@ db = {
 
 
 DDL_PATH = path.join(BASE_DIR, "core/DDL")
+
+MAIN_MENU = ('Withdraw', 'Transfer', 'Exit')
+
+LOGIN_MENU = ('Login', 'Register', "Quit")
+
+EPMLOYEE_MAIN_MENU =('Deposit', 'Interest_payment', 'Exit')
