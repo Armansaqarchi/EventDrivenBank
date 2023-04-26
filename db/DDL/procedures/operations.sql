@@ -1,3 +1,5 @@
+--takes account information, and creates the accoun
+--after the creation is done, a trigger called 'make_username' is called to resolve the username 
 CREATE OR REPLACE PROCEDURE Register(accountNumber NUMERIC(16, 0), password VARCHAR(60),
 firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type STATUS, interest_rate INT)
 AS $$
@@ -13,12 +15,24 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
+--takes username and password, hashes the password and then if anything matched these two, loggin is done.
 CREATE OR REPLACE PROCEDURE Login(username VARCHAR(50), password VARCHAR(50))
 AS $$
+    --declare a vatiable used to store hashed password
     DECLARE hashed_password VARCHAR(50);
     BEGIN
         hashed_password := DIGEST(password, 'sha256');
-        IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password);
+        IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
+            EXECUTE --function
+            RETURN "successfully logged in"
 
     END;
 $$ LANGUAGE plpgsql
+
+
+--this function adds the logged in username to the login log table
+CREATE FUNCTION login_log(username VARCHAR(50))
+AS $$
+    BEGIN
+    INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
+    END;
