@@ -14,6 +14,13 @@ AS $$
     END;
 $$ LANGUAGE plpgsql;
 
+--this function adds the logged in username to the login log table
+CREATE FUNCTION login_log(username VARCHAR(50))
+AS $$
+    BEGIN
+    INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
+    END;
+
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
 CREATE OR REPLACE PROCEDURE Login(username VARCHAR(50), password VARCHAR(50))
@@ -30,9 +37,14 @@ AS $$
 $$ LANGUAGE plpgsql
 
 
---this function adds the logged in username to the login log table
-CREATE FUNCTION login_log(username VARCHAR(50))
+CREATE OF REPLACE PROCEDURE deposit(amount NUMERIC(18, 0))
 AS $$
+    DECLARE username VARCHAR(50);
     BEGIN
-    INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
+        username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
+        
     END;
+$$ LANGUAGE plpgsql
+
+
+
