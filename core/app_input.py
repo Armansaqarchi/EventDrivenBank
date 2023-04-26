@@ -38,6 +38,8 @@ class AppInput:
 
         if choice == 1:
             # perform withdraw
+            amount = input("enter the amount of funds you would like to withdraw")
+            
         
         elif choice == 2:
             # perform transfer
