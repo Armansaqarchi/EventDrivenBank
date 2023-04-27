@@ -54,6 +54,13 @@ AS $$
     BEGIN
         username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
         transaction_time := CURRENT_TIMESTAMP;
-        EXECUTE create_transaction(type, from, to, amount);
+        IF type = 'deposit' THEN
+            -- do deposit things
+        ELSE IF type = 'withdraw' THEN
+            --do withdraw things
+        ELSE IF type = 'transfer' THEN
+            -- do transfer things
+        ELSE IF type = 'interest_payment' THEN
+            -- do interst payment things
     END;
 $$ LANGUAGE plpgsql
