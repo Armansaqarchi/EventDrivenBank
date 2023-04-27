@@ -111,10 +111,27 @@ $$ LANGUAGE plpgsql
 CREATE OR REPLACE PROCEDURE update_balance()
 AS $$
     DECLARE least_timestamp VARCHAR(50);
-    DECLARE events REFCURSOR
+    events REFCURSOR
+    record ROW
+
     BEGIN
         least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
+        OPEN events FOR SELECT * FROM transaction WHERE transaction_time > least_timestamp ORDER BY transaction_time ASC
+        LOOP
+            FETCH events INTO record;
+            -- leaves the loop if no row is available
+            EXIT WHEN NOT FOUND;
 
+            IF record.type = 'deposit' THEN
+                -- execute deposit
+            ELSE IF record.type = 'transfer' THEN
+                -- execute transfer
+            ELSE IF record.type = 'interest_payment' THEN
+                -- execute interest_payment
+            ELSE IF record.type = 'withdraw' THEN
+                -- execute withdraw
 
+            END IF;
+        END LOOP;
     END;
 $$ LANGUAGE plpgsql
