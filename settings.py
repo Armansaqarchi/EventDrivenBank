@@ -19,6 +19,12 @@ db = {
 }
 
 
+
+LOGGING = {
+    "level" : "logging.INFO"
+}
+
+
 DDL_PATH = path.join(BASE_DIR, "core/DDL")
 
 MAIN_MENU = ('Withdraw', 'Transfer', 'Exit')
