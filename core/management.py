@@ -109,7 +109,6 @@ class UtilizeManagement:
             job = cron.new(command)
             job.setall("0 * * * *")
         
-
         cron.write()
 
 
