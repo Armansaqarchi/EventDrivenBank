@@ -5,9 +5,11 @@ import importlib
 import settings
 
 # set logger to info level, used to help debugging
-logger = logging.basicConfig(
+logging.basicConfig(
 level=importlib.import_module(settings.LOGGING.get("level"))
 )
+
+logger = logging.getLogger(__name__)
 
 def main():
     """main function to run from configs and subcommands"""

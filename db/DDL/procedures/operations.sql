@@ -42,25 +42,48 @@ AS $$
 $$ LANGUAGE plpgsql
 
 
+CREATE PROCEDURE user_exists(username VARCHAR)
+AS $$
+    BEGIN
+        --checks if the user exists
+        RETURN SELECT EXISTS (SELECT * FROM account WHERE username = username);
+    END;
+$$ LANGUAGE plpgsql
 
 
 
---creates a procedure responsible to make deposit events
-CREATE OF REPLACE PROCEDURE deposit(amount NUMERIC(18, 0), type STATUS)
+-- creates the event based on the type passed as argument
+CREATE OF REPLACE PROCEDURE make_transaction(amount NUMERIC(18, 0), type STATUS, to VARCHAR(50))
 AS $$
     
     DECLARE transaction_time TIMESTAMP;
     DECLARE username VARCHAR(50);
+    DECLARE from VARCHAR(50);
+    DECLARE to VARCHAR(50);
     BEGIN
         username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
         transaction_time := CURRENT_TIMESTAMP;
-        IF type = 'deposit' THEN
-            -- do deposit things
+
+        IF to <> NULL THEN
+            --check username exists
+            IF NOT EXECUTE user_exists(to) THEN
+
+
+
+        IF type = 'deposit' OR type = 'interest_payment' THEN
+            --do deposit things
+            from := NULL;
+            to := username;
         ELSE IF type = 'withdraw' THEN
             --do withdraw things
+            from := username;
+            to := NULL;
         ELSE IF type = 'transfer' THEN
             -- do transfer things
-        ELSE IF type = 'interest_payment' THEN
-            -- do interst payment things
+            from := username;
+            to := to;
+        END IF;
+
+        EXECUTE create_transaction(type, from, to, amount)
     END;
 $$ LANGUAGE plpgsql
