@@ -1,9 +1,13 @@
 import sys
 import settings
+from start import logger
 
 
 
 class AppInput:
+
+    def __init__(self) -> None:
+        self.logger = logger
 
 
     def input(self, *args) -> int:
