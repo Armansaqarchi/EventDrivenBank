@@ -24,6 +24,13 @@ LOGGING = {
     "level" : "logging.INFO"
 }
 
+CRONTAB = {
+    "commands" : {
+        path.join(BASE_DIR, "commands", "updates_balances.py")
+    },
+    "schedule" : "0 * * * *"
+}
+
 
 DDL_PATH = path.join(BASE_DIR, "core/DDL")
 

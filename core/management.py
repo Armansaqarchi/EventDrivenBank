@@ -17,12 +17,12 @@ class UtilizeManagement:
         self.connection, self.sql_dialect = self.connect_database()
 
 
-    def get_commands(self):
+    def _get_commands(self):
         return os.getenv("COMMANDS")
     
 
     
-    def connect_database(self):
+    def _connect_database(self):
         """function to test database connectivity and setting configuration"""
 
         try:
@@ -43,7 +43,7 @@ class UtilizeManagement:
 
 
 
-    def help_text(self, commands_only = False) -> str:
+    def _help_text(self, commands_only = False) -> str:
         """stdout all the subcommands available"""
 
 
@@ -79,7 +79,7 @@ class UtilizeManagement:
         elif subcommand == "performdb":
             self.create_schema()
 
-    def create_schema(self):
+    def _create_schema(self):
         """runs every sql command available in folder specified in setting"""
         filenames = os.listdir(settings.DDL_PATH)
         for filename in filenames:
@@ -102,7 +102,16 @@ class UtilizeManagement:
         for command in sql_commands.split(";"):
             cursor.execute(command)
 
+    def _cron_configuration():
+        cron = import_module("crontab").Crontab()
+
+        for command in settings.CRONTAB.get("command"):
+            job = cron.new(command)
+            job.setall("0 * * * *")
         
+
+        cron.write()
+
 
 
         
