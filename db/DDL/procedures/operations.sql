@@ -102,6 +102,29 @@ AS $$
 $$ LANGUAGE plpgsql
 
 
+CREATE OR REPLACE FUNCTION do_transaction(event ROW) RETURNS BOOLEAN
+AS $$
+    BEGIN
+        IF event.type = 'deposit' THEN
+            --update deposit
+            
+        ELSE IF event.type = 'withdraw' THEN
+            --update deposit
+
+        ELSE IF event.type = 'interest_payment' THEN
+            --update deposit
+
+        ELSE IF event.type = 'transfer' THEN
+            --update deposit
+        END IF;
+    END;
+
+
+$$ LANGUAGE plpgsql
+
+
+
+
 -- updates all the events occured after the last snapshot
 -- takes the events first, in descending order
 -- executes every one of them
@@ -122,14 +145,7 @@ AS $$
             -- leaves the loop if no row is available
             EXIT WHEN NOT FOUND;
 
-            IF record.type = 'deposit' THEN
-                -- execute deposit
-            ELSE IF record.type = 'transfer' THEN
-                -- execute transfer
-            ELSE IF record.type = 'interest_payment' THEN
-                -- execute interest_payment
-            ELSE IF record.type = 'withdraw' THEN
-                -- execute withdraw
+            EXECUTE do_transaction(record)
 
             END IF;
         END LOOP;
