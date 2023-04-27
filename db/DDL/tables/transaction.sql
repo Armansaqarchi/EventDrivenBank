@@ -1,6 +1,7 @@
 
 CREATE TYPE STATUS IF NOT EXISTS AS ENUM ('deposit', 'withdraw', 'transfer', 'interest');
 
+----------------------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS transactions(
     type STATUS,

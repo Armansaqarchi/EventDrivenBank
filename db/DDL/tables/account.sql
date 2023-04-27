@@ -1,5 +1,6 @@
 CREATE TYPE STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
 
+-----------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS account(
     username VARCHAR(60) UNIQUE,
@@ -13,11 +14,16 @@ CREATE TABLE IF NOT EXISTS account(
     interest_rate INT NOT NULL
 );
 
+-------------------------------------------------------
+
+
 CREATE SEQUENCE IF NOT EXISTS NUMBER
 START 1
 INCREMENT 1
 NO MAXVALUE;
 
+
+--------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION make_username ()
     RETURNS TRIGGER AS $$

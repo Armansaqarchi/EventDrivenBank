@@ -15,6 +15,8 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
+-------------------------------------------------------------------------------------------------------------
+
 
 --this function adds the logged in username to the login log table
 CREATE FUNCTION login_log(username VARCHAR(50))
@@ -24,7 +26,7 @@ AS $$
     END;
 
 
-
+--------------------------------------------------------------------------------------------------------------
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
@@ -42,6 +44,9 @@ AS $$
 $$ LANGUAGE plpgsql
 
 
+------------------------------------------------------------------------------------------------------------------
+
+
 CREATE PROCEDURE user_exists(username VARCHAR)
 AS $$
     BEGIN
@@ -50,7 +55,7 @@ AS $$
     END;
 $$ LANGUAGE plpgsql
 
-
+------------------------------------------------------------------------------------------------------------------
 
 -- creates the event based on the type passed as argument
 CREATE OF REPLACE PROCEDURE make_transaction(amount NUMERIC(18, 0), type STATUS, to VARCHAR(50))
@@ -88,6 +93,8 @@ AS $$
     END;
 $$ LANGUAGE plpgsql
 
+------------------------------------------------------------------------------------------------------------------
+
 
 CREATE OR REPLACE PROCEDURE check_balance()
 AS $$
@@ -101,13 +108,15 @@ AS $$
     END;
 $$ LANGUAGE plpgsql
 
+------------------------------------------------------------------------------------------------------------------
+
 
 CREATE OR REPLACE FUNCTION do_transaction(event ROW) RETURNS BOOLEAN
 AS $$
     BEGIN
         IF event.type = 'deposit' THEN
             --update deposit
-            
+
         ELSE IF event.type = 'withdraw' THEN
             --update deposit
 
@@ -122,7 +131,7 @@ AS $$
 
 $$ LANGUAGE plpgsql
 
-
+-----------------------------------------------------------------------------------------------------------------
 
 
 -- updates all the events occured after the last snapshot
