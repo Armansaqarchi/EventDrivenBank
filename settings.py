@@ -32,3 +32,5 @@ MAIN_MENU = ('Withdraw', 'Transfer', 'Exit')
 LOGIN_MENU = ('Login', 'Register', "Quit")
 
 EPMLOYEE_MAIN_MENU =('Deposit', 'Interest_payment', 'Exit')
+
+INTEREST_RATE = 0.05

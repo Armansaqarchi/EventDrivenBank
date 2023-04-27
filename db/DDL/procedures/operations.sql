@@ -66,9 +66,9 @@ AS $$
 
         IF to <> NULL THEN
             --check username exists
-            IF NOT EXECUTE user_exists(to) THEN
-
-
+            IF NOT EXISTS EXECUTE user_exists(to) THEN
+                RETURN FALSE;
+        END IF;
 
         IF type = 'deposit' OR type = 'interest_payment' THEN
             --do deposit things
@@ -85,5 +85,18 @@ AS $$
         END IF;
 
         EXECUTE create_transaction(type, from, to, amount)
+    END;
+$$ LANGUAGE plpgsql
+
+
+CREATE OR REPLACE PROCEDURE check_balance()
+AS $$
+    DECLARE username VARCHAR(50);
+    DECLARE accountNumber VARCHAR(50);
+    BEGIN
+        --getting last login-log username
+        username := SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
+        accountNumber = SELECT accountNumber FROM account WHERE username = username
+        RETURN SELECT amount FROM latest_balances WHERE accountNumber = accountNumber 
     END;
 $$ LANGUAGE plpgsql
