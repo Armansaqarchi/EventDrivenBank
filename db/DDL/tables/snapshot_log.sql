@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS snapshot(
+CREATE TABLE IF NOT EXISTS snapshot_log(
     snapshot_id SERIAL PRIMARY KEY,
     snapshot_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )

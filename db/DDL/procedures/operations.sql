@@ -100,3 +100,21 @@ AS $$
         RETURN SELECT amount FROM latest_balances WHERE accountNumber = accountNumber 
     END;
 $$ LANGUAGE plpgsql
+
+
+-- updates all the events occured after the last snapshot
+-- takes the events first, in descending order
+-- executes every one of them
+-- this architecture may cause performance optimization,
+-- but it would be better to store these events in somewhere in ram
+-- like most of the dedicated libraries do (e.g kafka)
+CREATE OR REPLACE PROCEDURE update_balance()
+AS $$
+    DECLARE least_timestamp VARCHAR(50);
+    DECLARE events REFCURSOR
+    BEGIN
+        least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
+
+
+    END;
+$$ LANGUAGE plpgsql
