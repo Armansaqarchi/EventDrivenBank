@@ -87,7 +87,7 @@ class UtilizeManagement:
 
             
     def _exec_sql(self, filename):
-
+        
         """
         reads a sql filename and executes the file
         while executing commands, these exceptions might occur:
