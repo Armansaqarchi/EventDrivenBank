@@ -28,7 +28,7 @@ NO MAXVALUE;
 CREATE OR REPLACE FUNCTION make_username ()
     RETURNS TRIGGER AS $$
         BEGIN
-            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-',  nextval('number') ;
+            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-',  nextval('number');
         END
     $$ LANGUAGE plpgsql;
 

@@ -95,7 +95,7 @@ $$ LANGUAGE plpgsql
 
 ------------------------------------------------------------------------------------------------------------------
 
-
+-- returns the account balance based on last account logged in
 CREATE OR REPLACE PROCEDURE check_balance()
 AS $$
     DECLARE username VARCHAR(50);
@@ -113,12 +113,24 @@ $$ LANGUAGE plpgsql
 
 CREATE OR REPLACE FUNCTION do_transaction(event ROW) RETURNS BOOLEAN
 AS $$
+    DECLARE
+    record ROW;
+
     BEGIN
+
         IF event.type = 'deposit' THEN
             --update deposit
-
+            UPDATE latest_balances SET amount := amount + event.amount WHERE accountNumber = event.to
         ELSE IF event.type = 'withdraw' THEN
             --update deposit
+            IF event.amount > SELECT amount FROM latest_balances WHERE accountNumber = event.to THEN
+                record := SELECT * FROM account WHERE accountNumber = event.accountNumber;
+                IF record.type = 'client' THEN
+                    RETURN 'failed to complete transaction, account balance insufficient';
+                
+                -- according to instructions, transactions will be executed for employees anywhere
+                UPDATE latest_balances SET amount = amount - event.amount WHERE accountNumber = record.accountNumber;
+            
 
         ELSE IF event.type = 'interest_payment' THEN
             --update deposit
@@ -148,6 +160,7 @@ AS $$
 
     BEGIN
         least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
+        -- reference to the first tuple in events
         OPEN events FOR SELECT * FROM transaction WHERE transaction_time > least_timestamp ORDER BY transaction_time ASC
         LOOP
             FETCH events INTO record;
@@ -158,5 +171,8 @@ AS $$
 
             END IF;
         END LOOP;
+
+        -- free space in ram
+        CLOSE events;
     END;
 $$ LANGUAGE plpgsql
