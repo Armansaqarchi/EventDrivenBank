@@ -120,23 +120,39 @@ AS $$
 
         IF event.type = 'deposit' THEN
             --update deposit
-            UPDATE latest_balances SET amount := amount + event.amount WHERE accountNumber = event.to
+            UPDATE latest_balances SET amount = amount + event.amount WHERE accountNumber = event.to
+
+        -----------------------------------
         ELSE IF event.type = 'withdraw' THEN
             --update deposit
             IF event.amount > SELECT amount FROM latest_balances WHERE accountNumber = event.to THEN
-                record := SELECT * FROM account WHERE accountNumber = event.accountNumber;
+                record := SELECT * FROM account WHERE accountNumber = event.to;
                 IF record.type = 'client' THEN
                     RETURN 'failed to complete transaction, account balance insufficient';
                 
                 -- according to instructions, transactions will be executed for employees anywhere
                 UPDATE latest_balances SET amount = amount - event.amount WHERE accountNumber = record.accountNumber;
-            
-
+                END IF;
+            END IF;
+        ------------------------------------
         ELSE IF event.type = 'interest_payment' THEN
             --update deposit
-
+            record := SELECT * FROM account WHERE accountNumber = event.to;
+            IF record.type = 'employee' THEN
+                RETURN;
+            END IF;
+            UPDATE latest_balances SET amount = amount*record.interest_rate;
+        ------------------------------------
         ELSE IF event.type = 'transfer' THEN
             --update deposit
+            record = SELECT * FROM latest_balances WHERE accountNumber = event.accountNumber;
+            IF record.amount < event.amount THEN
+                UPDATE latest_balances SET amount = amount + event.amount WHERE accountNumber = event.to;
+                UPDATE latest_balances SET amoutn = amount - event.amount WHERE accountNumber = event.from;
+                RETURN TRUE;
+            
+            RETURN FALSE;
+            END IF;
         END IF;
     END;
 
