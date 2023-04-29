@@ -150,10 +150,10 @@ AS $$
                 UPDATE latest_balances SET amount = amount + event.amount WHERE accountNumber = event.to;
                 UPDATE latest_balances SET amoutn = amount - event.amount WHERE accountNumber = event.from;
                 RETURN TRUE;
-            
             RETURN FALSE;
             END IF;
         END IF;
+        ------------------------------------
     END;
 
 

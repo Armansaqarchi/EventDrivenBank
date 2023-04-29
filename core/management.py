@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 from importlib import import_module
 from .exceptions import ImproperlyConfigured
 import settings
+from app_input import AppInput
 import os
 import sys
 
@@ -71,7 +72,8 @@ class UtilizeManagement:
             subcommand = "help"
 
         if subcommand == "startapp":
-            self.runapp()            
+            application_input = AppInput(connection= self.connection)
+            application_input.login_menu()      
         
         elif subcommand == "help":
             self.help_text()

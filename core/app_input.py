@@ -6,11 +6,12 @@ from start import logger
 
 class AppInput:
 
-    def __init__(self) -> None:
+    def __init__(self, connection) -> None:
         self.logger = logger
+        self.connection = connection
 
 
-    def input(self, *args) -> int:
+    def get_input(self, *args) -> int:
         """
         takes a tuple of options and shows them in the console
         this function also encapsulates the input data to be a correct choice
@@ -38,12 +39,15 @@ class AppInput:
         """
         invokes input function and performs main operations
         """
-        choice = input(settings.MAIN_MENU)
+        choice = self.get_input(settings.MAIN_MENU)
 
         if choice == 1:
             # perform withdraw
             amount = input("enter the amount of funds you would like to withdraw")
-            
+            logger.info("preparing for withdraw transaction")
+            cursor= self.connection.cursor()
+            cursor.execute()
+
         
         elif choice == 2:
             # perform transfer
@@ -56,7 +60,7 @@ class AppInput:
         """
         invokes input function and performs login operations
         """
-        choice = input(settings.LOGIN_MENU)
+        choice = self.get_input(settings.LOGIN_MENU)
 
     
             
