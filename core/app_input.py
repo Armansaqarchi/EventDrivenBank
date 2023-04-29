@@ -1,12 +1,15 @@
 import sys
 import settings
 from start import logger
-
+from psycopg2 import connection
+from psycopg2 import(
+    ProgrammingError
+)
 
 
 class AppInput:
 
-    def __init__(self, connection) -> None:
+    def __init__(self, connection : connection) -> None:
         self.logger = logger
         self.connection = connection
 
@@ -39,21 +42,28 @@ class AppInput:
         """
         invokes input function and performs main operations
         """
-        choice = self.get_input(settings.MAIN_MENU)
+        while(True):
+            try:
+                choice = self.get_input(settings.MAIN_MENU)
 
-        if choice == 1:
-            # perform withdraw
-            amount = input("enter the amount of funds you would like to withdraw")
-            logger.info("preparing for withdraw transaction")
-            cursor= self.connection.cursor()
-            cursor.execute()
+                if choice == 1:
+                    # perform withdraw
+                    amount = input("enter the amount of funds you would like to withdraw")
+                    logger.info("preparing for withdraw transaction")
 
+                    cursor= self.connection.cursor()
+                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'withdraw', None))
+                    cursor.fetchone()[0]
+
+                
+                elif choice == 2:
+                    # perform transfer
+
+                elif choice == 3:
+                    sys.exit(0)
+            except ProgrammingError as e:
+                logger.error("failed to fire the function or database may have been improperly configured")
         
-        elif choice == 2:
-            # perform transfer
-
-        elif choice == 3:
-            sys.exit(0)
 
     
     def login_menu(self, *args) -> int:

@@ -10,7 +10,6 @@ BASE_DIR = Path(__file__).resolve().parent
 
 
 db = {
-    "DB_ADAPTER" : "psychopg2",
     "HOST" : "127.0.0.1",
     "DATABASE" : "event_driven",
     "PORT" : "5432",

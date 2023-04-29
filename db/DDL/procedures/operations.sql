@@ -90,6 +90,7 @@ AS $$
         END IF;
 
         EXECUTE create_transaction(type, from, to, amount)
+        RETURN TRUE;
     END;
 $$ LANGUAGE plpgsql
 

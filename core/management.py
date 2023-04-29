@@ -4,7 +4,7 @@ from .exceptions import ImproperlyConfigured
 import settings
 from app_input import AppInput
 import os
-
+import psycopg2
 
 
 class UtilizeManagement:
@@ -13,7 +13,7 @@ class UtilizeManagement:
     def init(self, argv=None):
         self.argv = argv
         load_dotenv()
-        self.connection, self.sql_dialect = self.connect_database()
+        self.connection = self._connect_database()
 
 
     def _get_commands(self):
@@ -25,20 +25,17 @@ class UtilizeManagement:
         """function to test database connectivity and setting configuration"""
 
         try:
-            sql_database = settings.db["DB_ADAPTER"]
-            sql = import_module(sql_database)
-            
-            if sql_database == "psychopg":
-                connection = sql.connect(
-                    host= settings.db["HOST"],
-                    port = settings.db["PORT"],
-                    database = settings.db["DATABASE"],
-                    user = settings.db["USER"],
-                    password = settings.db["PASSWORD"]
-                )
+            connection = psycopg2.connect(
+            host= settings.db["HOST"],
+            port = settings.db["PORT"],
+            database = settings.db["DATABASE"],
+            user = settings.db["USER"],
+            password = settings.db["PASSWORD"]
+            )
+
         except AttributeError:
             raise ImproperlyConfigured("settings.db is not configured properly")
-        return connection, sql
+        return connection
 
 
 
