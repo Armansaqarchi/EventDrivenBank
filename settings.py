@@ -33,10 +33,10 @@ CRONTAB = {
 
 DDL_PATH = path.join(BASE_DIR, "core/DDL")
 
-MAIN_MENU = ('Withdraw', 'Transfer', 'Exit')
+MAIN_MENU = ('withdraw', 'transfer', 'exit')
 
-LOGIN_MENU = ('Login', 'Register', "Quit")
+LOGIN_MENU = ('login', 'register', "quit")
 
-EPMLOYEE_MAIN_MENU =('Deposit', 'Interest_payment', 'Exit')
+EPMLOYEE_MAIN_MENU =('withdraw', 'transfer', 'deposit', 'interest_payment', 'exit')
 
 INTEREST_RATE = 0.05

@@ -9,9 +9,10 @@ from psycopg2 import(
 
 class AppInput:
 
-    def __init__(self, connection : connection) -> None:
+    def __init__(self, connection : connection, user = None) -> None:
         self.logger = logger
         self.connection = connection
+        self.user = user
 
 
     def get_input(self, *args) -> int:
@@ -53,11 +54,22 @@ class AppInput:
 
                     cursor= self.connection.cursor()
                     cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'withdraw', None))
-                    cursor.fetchone()[0]
+                    print(cursor.fetchone()[0])
 
                 
                 elif choice == 2:
                     # perform transfer
+                    amount = input("enter the amount of funds you would like to transfer")
+                    logger.info("preparing for transfer transaction")
+                    account_number =  input("which account number you would like to transfer to?")
+
+                    if len(account_number) != 16 :
+                        print("invalid account number, the number must be a combination of 16 characters")
+                        continue
+
+                    cursor = self.connection.cursor()
+                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'transfer', account_number))
+                    print(cursor.fetchone[0])
 
                 elif choice == 3:
                     sys.exit(0)
