@@ -4,8 +4,6 @@ from .exceptions import ImproperlyConfigured
 import settings
 from app_input import AppInput
 import os
-import sys
-
 
 
 
