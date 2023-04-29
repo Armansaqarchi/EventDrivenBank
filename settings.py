@@ -27,16 +27,15 @@ CRONTAB = {
     "commands" : {
         path.join(BASE_DIR, "commands", "updates_balances.py")
     },
-    "schedule" : "0 * * * *"
+    # this means that the job is triggered every minute
+    "schedule" : "* * * * *"
 }
 
 
 DDL_PATH = path.join(BASE_DIR, "core/DDL")
 
-MAIN_MENU = ('withdraw', 'transfer', 'exit')
+MAIN_MENU = ('withdraw', 'transfer', 'deposit', 'interest_payment', 'exit')
 
 LOGIN_MENU = ('login', 'register', "quit")
-
-EPMLOYEE_MAIN_MENU =('withdraw', 'transfer', 'deposit', 'interest_payment', 'exit')
 
 INTEREST_RATE = 0.05

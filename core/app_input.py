@@ -1,5 +1,6 @@
 import sys
 import settings
+
 from start import logger
 from psycopg2 import connection
 from psycopg2 import(
@@ -9,10 +10,12 @@ from psycopg2 import(
 
 class AppInput:
 
-    def __init__(self, connection : connection, user = None) -> None:
+    conn = None
+
+    def __init__(self, connection : connection) -> None:
         self.logger = logger
-        self.connection = connection
-        self.user = user
+        conn = connection
+
 
 
     def get_input(self, *args) -> int:
@@ -52,7 +55,7 @@ class AppInput:
                     amount = input("enter the amount of funds you would like to withdraw")
                     logger.info("preparing for withdraw transaction")
 
-                    cursor= self.connection.cursor()
+                    cursor= AppInput.conn.cursor()
                     cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'withdraw', None))
                     print(cursor.fetchone()[0])
 
@@ -67,12 +70,20 @@ class AppInput:
                         print("invalid account number, the number must be a combination of 16 characters")
                         continue
 
-                    cursor = self.connection.cursor()
+                    cursor = AppInput.conn.cursor()
                     cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'transfer', account_number))
-                    print(cursor.fetchone[0])
+                    print(cursor.fetchone()[0])
 
                 elif choice == 3:
+                    amount = input("amount of money to deposit?")
+                    cursor = AppInput.conn.cursor()
+                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'deposit'))
+                    print(cursor.fetchone()[0])
+                    cursor.close()
+                elif choice == 4:
                     sys.exit(0)
+                    
+
             except ProgrammingError as e:
                 logger.error("failed to fire the function or database may have been improperly configured")
         

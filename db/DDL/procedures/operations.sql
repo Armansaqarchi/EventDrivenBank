@@ -191,5 +191,6 @@ AS $$
 
         -- free space in ram
         CLOSE events;
+        RETURN TRUE
     END;
 $$ LANGUAGE plpgsql
