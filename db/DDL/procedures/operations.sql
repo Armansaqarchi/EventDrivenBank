@@ -204,7 +204,11 @@ CREATE OR REPLACE PROCEDURE create_snapshot(id VARCHAR(50))
 AS $$
     BEGIN
         EXECUTE 'CREATE TABLE snapshot_' || id ||'(account_number VARCHAR(16), amount int)';
-        EXECUTE 'INSERT INTO snapshot_' || id || '(account_number VARCHAR(16), amount int) VALUES SELECT * FROM latest_balances' 
+        EXECUTE 'INSERT INTO snapshot_' || id || '(account_number VARCHAR(16), amount int) VALUES SELECT * FROM latest_balances'
+        EXCEPTION
+            WHEN others THEN
+                RAISE NOTICE 'there is something wrong with creating snapshot_id table : %s' SQLERRM;
+        RETURNS TRUE
     END;
 
 $$ LANGUAGE plpgsql
