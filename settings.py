@@ -9,6 +9,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 
+
 db = {
     "HOST" : "127.0.0.1",
     "DATABASE" : "event_driven",
@@ -20,7 +21,7 @@ db = {
 
 
 LOGGING = {
-    "level" : "logging.INFO"
+    "level" : "INFO"
 }
 
 CRONTAB = {

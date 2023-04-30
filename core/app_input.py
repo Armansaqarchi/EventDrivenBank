@@ -2,7 +2,7 @@ import sys
 import settings
 
 from start import logger
-from psycopg2 import connection
+from psycopg2.extensions import connection
 from psycopg2 import(
     ProgrammingError
 )

@@ -2,18 +2,19 @@ from dotenv import load_dotenv
 from importlib import import_module
 from .exceptions import ImproperlyConfigured
 import settings
-from app_input import AppInput
+from core.app_input import AppInput
 import os
+from psycopg2 import OperationalError
 import psycopg2
 
 
 class UtilizeManagement:
     """Encapsulate utilities"""
     
-    def init(self, argv=None):
+    def __init__(self, argv=None):
         self.argv = argv
-        load_dotenv()
-        self.connection = self._connect_database()
+        self.env = load_dotenv()
+        
 
 
     def _get_commands(self):
@@ -35,6 +36,8 @@ class UtilizeManagement:
 
         except AttributeError:
             raise ImproperlyConfigured("settings.db is not configured properly")
+        except OperationalError:
+            raise ImproperlyConfigured("could not establish connection to database, are you sure all the migrations are applied to database?")
         return connection
 
 
@@ -42,17 +45,15 @@ class UtilizeManagement:
     def _help_text(self, commands_only = False) -> str:
         """stdout all the subcommands available"""
 
-
         commands = "here are the list of <subcommands> available :\n"
         try:
             commands_only = self.argv[2] == "--commands"
             if commands_only:
-                for command, _ in os.environ.items:
+                for command, _ in self.env.items():
                     commands.join("%s" + "\n" %command)
             return commands
-        except(IndexError):
-            pass
-            for command, description in os.environ.items:
+        except IndexError :
+            for command, description in self.env.items():
                     commands.join("%s     %s" %(command, description))
 
         return commands
@@ -67,13 +68,16 @@ class UtilizeManagement:
             subcommand = "help"
 
         if subcommand == "startapp":
+            self.connection = self._connect_database()
             application_input = AppInput(connection= self.connection)
             application_input.login_menu()      
         
         elif subcommand == "help":
-            self._help_text()
+            commands = self._help_text()
+            print(commands)
 
         elif subcommand == "performdb":
+            self.connection = self._connect_database()
             self._create_schema()
 
     def _create_schema(self):
