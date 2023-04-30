@@ -1,8 +1,9 @@
-import sys
-import os
 import logging
 import importlib
 import settings
+import sys
+from .core.management import UtilizeManagement
+
 
 # set logger to info level, used to help debugging
 logging.basicConfig(
@@ -13,11 +14,9 @@ logger = logging.getLogger(__name__)
 
 def main():
     """main function to run from configs and subcommands"""
+    command_runner = UtilizeManagement(sys.argv)
+    command_runner.exec_command()
     
-
-    
-
-
 
 
 if __name__ == "__main__":
