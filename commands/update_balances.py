@@ -15,7 +15,16 @@ def update_balances():
     cursor.execute("SELECT * FROM update_balance()")
     if cursor.fetchone()[0]:
         logger.log(f"updates are done successfully at {datetime.now()}")
-    else:
-        logger.warning("there was an error while trying to update all the events, make sure that there is no leak in data consistancy, or use the events to fix it")
+        create_snapshot_id()
+        
+    
+    logger.warning("there was an error while trying to update all the events, make sure that there is no leak in data consistancy, or use the events to fix it")
+    return
+
+    
+
+def create_snapshot_id():
+    
+
 
     

@@ -71,19 +71,19 @@ class UtilizeManagement:
             application_input.login_menu()      
         
         elif subcommand == "help":
-            self.help_text()
+            self._help_text()
 
         elif subcommand == "performdb":
-            self.create_schema()
+            self._create_schema()
 
     def _create_schema(self):
         """runs every sql command available in folder specified in setting"""
         filenames = os.listdir(settings.DDL_PATH)
         for filename in filenames:
-            self._exec_sql(filename=filename)
+            self._exec_ddls(filename=filename)
 
             
-    def _exec_sql(self, filename):
+    def _exec_ddls(self, filename):
         
         """
         reads a sql filename and executes the file

@@ -186,6 +186,8 @@ AS $$
 
             EXECUTE do_transaction(record)
 
+
+
             END IF;
         END LOOP;
 
@@ -193,4 +195,16 @@ AS $$
         CLOSE events;
         RETURN TRUE
     END;
+$$ LANGUAGE plpgsql
+
+-------------------------------------------------------------------------------------------------------------
+
+--creates a new table whose name is snapshot_id which id depends on the numbers updates balance been called
+CREATE OR REPLACE PROCEDURE create_snapshot(id VARCHAR(50))
+AS $$
+    BEGIN
+        EXECUTE 'CREATE TABLE snapshot_' || id ||'(account_number VARCHAR(16), amount int)';
+        EXECUTE 'INSERT INTO snapshot_' || id || '(account_number VARCHAR(16), amount int) VALUES SELECT * FROM latest_balances' 
+    END;
+
 $$ LANGUAGE plpgsql
