@@ -33,7 +33,9 @@ CRONTAB = {
 }
 
 
-DDL_PATH = path.join(BASE_DIR, "core/DDL")
+DDL_PATH = {
+    "tables" : path.join(BASE_DIR, "core/db/tables"),
+    "procedures" : path.join(BASE_DIR, "core/db/procedures")}
 
 MAIN_MENU = ('withdraw', 'transfer', 'deposit', 'interest_payment', 'exit')
 

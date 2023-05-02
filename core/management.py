@@ -6,7 +6,7 @@ from core.app_input import AppInput
 import os
 from psycopg2 import OperationalError
 import psycopg2
-
+from start import logger
 
 class UtilizeManagement:
     """Encapsulate utilities"""
@@ -83,8 +83,14 @@ class UtilizeManagement:
 
     def _create_schema(self):
         """runs every sql command available in folder specified in setting"""
-        filenames = os.listdir(settings.DDL_PATH)
-        for filename in filenames:
+        table_filenames = os.listdir(settings.DDL_PATH.get("tables"))
+        procedure_filenames = os.listdir(settings.DDL_PATH.get("procedures"))
+        for filename in table_filenames:
+            logger.info(f"creating database ddl, running scripts in {settings.DDL_PATH.get('tables')}")
+            self._exec_ddls(filename=filename)
+        
+        for filename in procedure_filenames:
+            logger.info(f"creating database procedures, running scripts in {settings.DDL_PATH.get('procedures')}")
             self._exec_ddls(filename=filename)
 
             
