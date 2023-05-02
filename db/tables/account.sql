@@ -1,4 +1,4 @@
-CREATE TYPE STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
+CREATE TYPE USER_STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
 
 -----------------------------------------------------
 
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS account(
     lastname VARCHAR(50),
     nationalID NUMERIC(10, 0),
     birth_of_date DATE,
-    type STATUS,
+    type USER_STATUS,
     interest_rate INT NOT NULL
 );
 
