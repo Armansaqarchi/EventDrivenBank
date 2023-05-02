@@ -9,5 +9,6 @@ $$ LANGUAGE plpgsql;
 
 
 
-CREATE TRIGGER balance AFTER INSERT ON account FOR EACH ROW
+CREATE TRIGGER balance AFTER INSERT ON account
+FOR EACH ROW
     EXECUTE FUNCTION make_new_balance();

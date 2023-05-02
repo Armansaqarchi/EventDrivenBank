@@ -9,7 +9,7 @@ AS $$
             hashed_password := DIGEST(password, 'sha256');
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, type, interest_rate);
-            RETURN 'user successfully created, username : ' || username;
+            RETURN;
         END IF;
     END;
 $$ LANGUAGE plpgsql;
@@ -23,10 +23,11 @@ CREATE FUNCTION login_log(username VARCHAR(50))
     RETURNS BOOLEAN
 AS $$
     BEGIN
-    INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
-    EXCEPTION WHEN others
+    INSERT INTO login_log VALUES (username, CURRENT_TIMESTAMP);
+    EXCEPTION 
+    WHEN others THEN
         RETURN FALSE;
-    
+    RETURN TRUE;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -44,9 +45,9 @@ BEGIN
     hashed_password := digest(password, 'sha256');
     IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
-        RETURN TRUE;
+        RETURN;
     ELSE
-        RETURN FALSE;
+        RAISE NOTICE 'username or password is incorrect';
     END IF;
 END;
 $$;
@@ -55,118 +56,127 @@ $$;
 ------------------------------------------------------------------------------------------------------------------
 
 
-CREATE PROCEDURE user_exists(username VARCHAR)
+CREATE PROCEDURE user_exists(IN username VARCHAR, OUT user_exists)
+LANGUAGE plpgsql
 AS $$
     BEGIN
         --checks if the user exists
-        RETURN SELECT EXISTS (SELECT * FROM account WHERE username = username);
+        user_exists := SELECT EXISTS (SELECT * FROM account WHERE username = username);
+        RETURN;
     END;
-$$ LANGUAGE plpgsql
+$$;
 
 ------------------------------------------------------------------------------------------------------------------
 
 -- creates the event based on the type passed as argument
-CREATE OF REPLACE PROCEDURE make_transaction(amount NUMERIC(18, 0), type STATUS, to VARCHAR(50))
+CREATE OR REPLACE PROCEDURE make_transaction(amount NUMERIC(18, 0), type STATUS, to_who VARCHAR(50))
+LANGUAGE plpgsql
 AS $$
     
     DECLARE transaction_time TIMESTAMP;
     DECLARE username VARCHAR(50);
     DECLARE from VARCHAR(50);
-    DECLARE to VARCHAR(50);
+    DECLARE recipient VARCAHR(50);
     BEGIN
         username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
         transaction_time := CURRENT_TIMESTAMP;
 
-        IF to <> NULL THEN
+        IF to_who <> NULL THEN
             --check username exists
-            IF NOT EXISTS EXECUTE user_exists(to) THEN
-                RETURN FALSE;
+            IF NOT EXISTS EXECUTE user_exists(to_who) THEN
+                RETURN;
         END IF;
 
         IF type = 'deposit' OR type = 'interest_payment' THEN
             --do deposit things
             from := NULL;
-            to := username;
+            recipient := username;
         ELSE IF type = 'withdraw' THEN
             --do withdraw things
             from := username;
-            to := NULL;
+            recipient := NULL;
         ELSE IF type = 'transfer' THEN
             -- do transfer things
             from := username;
-            to := to;
+            recipient := to;
         END IF;
 
-        EXECUTE create_transaction(type, from, to, amount)
-        RETURN TRUE;
+        EXECUTE create_transaction(type, from, recipient, amount)
+        RETURN;
     END;
-$$ LANGUAGE plpgsql
+$$;
 
 ------------------------------------------------------------------------------------------------------------------
 
 -- returns the account balance based on last account logged in
-CREATE OR REPLACE PROCEDURE check_balance()
+CREATE OR REPLACE PROCEDURE check_balance(OUT balance int)
+LANGUAGE plpgsql
 AS $$
     DECLARE username VARCHAR(50);
     DECLARE accountNumber VARCHAR(50);
     BEGIN
         --getting last login-log username
         username := SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
-        accountNumber = SELECT accountNumber FROM account WHERE username = username
-        RETURN SELECT amount FROM latest_balances WHERE accountNumber = accountNumber 
+        accountNumber = SELECT accountNumber FROM account WHERE username = username;
+        balance := SELECT amount FROM latest_balances WHERE accountNumber = accountNumber;
+        RETURN;
     END;
-$$ LANGUAGE plpgsql
+$$;
 
 ------------------------------------------------------------------------------------------------------------------
 
 
-CREATE OR REPLACE FUNCTION do_transaction(event ROW) RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION do_transaction(IN type VARCHAR(50),IN from_who VARCHAR(50),IN to_who VARCHAR(50),IN event_amount int, OUT out_value) RETURNS BOOLEAN
 AS $$
     DECLARE
     record ROW;
 
     BEGIN
 
-        IF event.type = 'deposit' THEN
+        IF type = 'deposit' THEN
             --update deposit
-            UPDATE latest_balances SET amount = amount + event.amount WHERE accountNumber = event.to
+            UPDATE latest_balances SET amount = event_amount + amount WHERE accountNumber = to_who
 
         -----------------------------------
-        ELSE IF event.type = 'withdraw' THEN
+        ELSE IF type = 'withdraw' THEN
             --update deposit
-            IF event.amount > SELECT amount FROM latest_balances WHERE accountNumber = event.to THEN
-                record := SELECT * FROM account WHERE accountNumber = event.to;
-                IF record.type = 'client' THEN
-                    RETURN 'failed to complete transaction, account balance insufficient';
+            IF event_amount > SELECT amount FROM latest_balances WHERE accountNumber = to_who THEN
+                record := SELECT * FROM account WHERE accountNumber = to_who;
+                IF type = 'client' THEN
+                    out_value := 'failed to complete transaction, account balance insufficient';
+                    RETURN;
                 
                 -- according to instructions, transactions will be executed for employees anywhere
-                UPDATE latest_balances SET amount = amount - event.amount WHERE accountNumber = record.accountNumber;
+                UPDATE latest_balances SET amount = amount - event_amount WHERE accountNumber = record.accountNumber;
                 END IF;
             END IF;
         ------------------------------------
-        ELSE IF event.type = 'interest_payment' THEN
+        ELSE IF type = 'interest_payment' THEN
             --update deposit
-            record := SELECT * FROM account WHERE accountNumber = event.to;
-            IF record.type = 'employee' THEN
+            record := SELECT * FROM account WHERE accountNumber = event_data.to;
+            IF type = 'employee' THEN
+                out_value := 'no interest_payment for employee';
                 RETURN;
             END IF;
             UPDATE latest_balances SET amount = amount*record.interest_rate;
         ------------------------------------
-        ELSE IF event.type = 'transfer' THEN
+        ELSE IF type = 'transfer' THEN
             --update deposit
-            record = SELECT * FROM latest_balances WHERE accountNumber = event.accountNumber;
-            IF record.amount < event.amount THEN
-                UPDATE latest_balances SET amount = amount + event.amount WHERE accountNumber = event.to;
-                UPDATE latest_balances SET amoutn = amount - event.amount WHERE accountNumber = event.from;
-                RETURN TRUE;
-            RETURN FALSE;
+            record = SELECT * FROM latest_balances WHERE accountNumber = from_who;
+            IF record.amount > event_amount THEN
+                UPDATE latest_balances SET amount = amount + event_amount WHERE accountNumber = to_who;
+                UPDATE latest_balances SET amoutn = amount - event_amount WHERE accountNumber = from_who;
+                out_value := 'successful transfer'
+                RETURN;
+            out_value := 'something went wrong while performing the transaction'
+            RETURN;
             END IF;
         END IF;
         ------------------------------------
     END;
 
 
-$$ LANGUAGE plpgsql
+$$ LANGUAGE plpgsql;
 
 -----------------------------------------------------------------------------------------------------------------
 
@@ -177,7 +187,8 @@ $$ LANGUAGE plpgsql
 -- this architecture may cause performance optimization,
 -- but it would be better to store these events in somewhere in ram
 -- like most of the dedicated libraries do (e.g kafka)
-CREATE OR REPLACE PROCEDURE update_balance()
+CREATE OR REPLACE PROCEDURE update_balance(OUT out_value)
+LANGUAGE plpgsql
 AS $$
     DECLARE least_timestamp VARCHAR(50);
     events REFCURSOR;
@@ -192,23 +203,22 @@ AS $$
             -- leaves the loop if no row is available
             EXIT WHEN NOT FOUND;
 
-            EXECUTE do_transaction(record)
-
-
-
+            EXECUTE do_transaction(record.type, record.from, record.to, record.amount)
             END IF;
         END LOOP;
 
         -- free space in ram
         CLOSE events;
-        RETURN TRUE
+        out_value := 'successfully updated events'
+        RETURN 
     END;
-$$ LANGUAGE plpgsql
+$$;
 
 -------------------------------------------------------------------------------------------------------------
 
 --creates a new table whose name is snapshot_id which id depends on the numbers updates balance been called
-CREATE OR REPLACE PROCEDURE create_snapshot(id VARCHAR(50))
+CREATE OR REPLACE PROCEDURE create_snapshot(IN id VARCHAR(50),OUT out_value BOOLEAN)
+LANGUAGE plpgsql
 AS $$
     BEGIN
         EXECUTE 'CREATE TABLE snapshot_' || id ||'(account_number VARCHAR(16), amount int)';
@@ -216,7 +226,8 @@ AS $$
         EXCEPTION
             WHEN others THEN
                 RAISE NOTICE 'there is something wrong with creating snapshot_id table : %s' SQLERRM;
-        RETURNS TRUE
+        out_value := TRUE
+        RETURN
     END;
 
-$$ LANGUAGE plpgsql
+$$;
