@@ -5,15 +5,23 @@ import sys
 
 
 
-# set logger to info level, used to help debugging
-logging.basicConfig(
-level = getattr(logging, settings.LOGGING["level"]),
-)
+def make_logger():
+        # set logger to info level, used to help debugging
+    logging.basicConfig(
+    level = getattr(logging, settings.LOGGING["level"]),
+    )
+    logger = logging.getLogger(__name__)
+    # creating console handler to change log format
+    ch = logging.StreamHandler()
+    # creating arbitrary format
+    formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
 
-logger = logging.getLogger(__name__)
+    return logger
 
-# creating console handler to change log format
-ch = logging.StreamHandler()
+
+logger = make_logger()
 
 
 def main():
@@ -30,3 +38,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
