@@ -5,6 +5,7 @@ import settings
 from core.app_input import AppInput
 import os
 from psycopg2 import OperationalError
+from psycopg2 import errors
 import psycopg2
 from start import logger
 
@@ -87,14 +88,17 @@ class UtilizeManagement:
 
         table_filenames = os.listdir(settings.DDL_PATH.get("tables"))
         procedure_filenames = os.listdir(settings.DDL_PATH.get("procedures"))
-        for filename in table_filenames:
-            logger.info(f"creating database ddl, running scripts in {settings.DDL_PATH.get('tables')}")
+        logger.info(f"creating database ddl, running scripts in {settings.DDL_PATH.get('tables')}")
+        for filename in table_filenames: 
             # making abs path of the given file
             filename = settings.DDL_PATH.get("tables") + "/" + filename
             self._exec_ddls(file_dir=filename)
         
+        logger.info(f"creating database procedures, running scripts in {settings.DDL_PATH.get('procedures')}")
         for filename in procedure_filenames:
-            logger.info(f"creating database procedures, running scripts in {settings.DDL_PATH.get('procedures')}")
+            if not filename.endswith(".sql"):
+                continue
+            
             filename = settings.DDL_PATH.get("procedures") + "/" + filename
             self._exec_ddls(file_dir=filename)
 
@@ -106,14 +110,19 @@ class UtilizeManagement:
         while executing commands, these exceptions might occur:
         ProgrammingError, OperationalError, IntegrityError, DataError, NotSupportedError
         """
+
         
         sql_file = open(file_dir, "r")
         sql_commands = sql_file.read()
         sql_file.close()
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(sql_commands)
+        except errors.DuplicateObject as e:
+            logger.warning("entity already exists : ", str(e))
+            pass
 
-        cursor = self.connection.cursor()
-        for command in sql_commands.split(";"):
-            cursor.execute(command)
+
 
     def _cron_configuration():
         cron = import_module("crontab").Crontab()

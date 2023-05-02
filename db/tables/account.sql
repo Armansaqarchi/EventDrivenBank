@@ -4,7 +4,7 @@ CREATE TYPE STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
 
 CREATE TABLE IF NOT EXISTS account(
     username VARCHAR(60) UNIQUE,
-    accountNumber NUMERIC(16, 0),
+    accountNumber NUMERIC(16, 0) UNIQUE,
     password VARCHAR(200),
     firstname VARCHAR(50),
     lastname VARCHAR(50),
@@ -25,13 +25,17 @@ NO MAXVALUE;
 
 --------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION make_username ()
+CREATE OR REPLACE FUNCTION make_username()
     RETURNS TRIGGER AS $$
+        DECLARE id VARCHAR(50);
         BEGIN
-            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-',  nextval('number');
-        END
-    $$ LANGUAGE plpgsql;
+            id := nextval('number');
+            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-' || id;
+            RETURN NEW;
+        END;
+$$ LANGUAGE plpgsql;
 
+--------------------------------------------------------
 
 CREATE TRIGGER username AFTER INSERT ON account FOR EACH ROW
     EXECUTE FUNCTION make_username();
