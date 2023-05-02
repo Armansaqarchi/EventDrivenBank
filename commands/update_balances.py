@@ -23,8 +23,7 @@ def update_balances():
 
     
 
-def create_snapshot_id():
-    
+
 
 
     

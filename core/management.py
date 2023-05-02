@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+from dotenv import dotenv_values
 from importlib import import_module
 from .exceptions import ImproperlyConfigured
 import settings
@@ -13,7 +13,7 @@ class UtilizeManagement:
     
     def __init__(self, argv=None):
         self.argv = argv
-        self.env = load_dotenv()
+        self.env = dotenv_values(os.path.join(settings.BASE_DIR, "envs.env"))
         
 
 
@@ -45,7 +45,7 @@ class UtilizeManagement:
     def _help_text(self, commands_only = False) -> str:
         """stdout all the subcommands available"""
 
-        commands = "here are the list of <subcommands> available :\n"
+        commands = "here are the list of <subcommands> available :\n\n\n"
         try:
             commands_only = self.argv[2] == "--commands"
             if commands_only:
@@ -54,7 +54,8 @@ class UtilizeManagement:
             return commands
         except IndexError :
             for command, description in self.env.items():
-                    commands.join("%s     %s" %(command, description))
+                    print(command, description)
+                    commands += "{:<10}:{:<20}\n".format(command, description)
 
         return commands
     

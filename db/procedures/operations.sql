@@ -172,8 +172,8 @@ $$ LANGUAGE plpgsql
 CREATE OR REPLACE PROCEDURE update_balance()
 AS $$
     DECLARE least_timestamp VARCHAR(50);
-    events REFCURSOR
-    record ROW
+    events REFCURSOR;
+    record ROW;
 
     BEGIN
         least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
