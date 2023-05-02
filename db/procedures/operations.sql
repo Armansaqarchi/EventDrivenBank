@@ -20,20 +20,26 @@ $$ LANGUAGE plpgsql;
 
 --this function adds the logged in username to the login log table
 CREATE FUNCTION login_log(username VARCHAR(50))
+    RETURNS BOOLEAN
 AS $$
     BEGIN
     INSERT INTO TABLE login_log VALUES (username, CURRENT_TIMESTAMP)
-    END;
+    EXCEPTION WHEN others
+        RETURN FALSE;
+    
+END;
+$$ LANGUAGE plpgsql;
 
 
 --------------------------------------------------------------------------------------------------------------
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
-CREATE OR REPLACE PROCEDURE Login(username VARCHAR(50), password VARCHAR(50))
+CREATE OR REPLACE PROCEDURE Login(IN username VARCHAR(50), IN password VARCHAR(50))
 LANGUAGE plpgsql
 AS $$
-DECLARE hashed_password TEXT;
+DECLARE 
+    hashed_password TEXT;
 BEGIN
     hashed_password := digest(password, 'sha256');
     IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
