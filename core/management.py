@@ -83,26 +83,31 @@ class UtilizeManagement:
 
     def _create_schema(self):
         """runs every sql command available in folder specified in setting"""
+
+
         table_filenames = os.listdir(settings.DDL_PATH.get("tables"))
         procedure_filenames = os.listdir(settings.DDL_PATH.get("procedures"))
         for filename in table_filenames:
             logger.info(f"creating database ddl, running scripts in {settings.DDL_PATH.get('tables')}")
-            self._exec_ddls(filename=filename)
+            # making abs path of the given file
+            filename = settings.DDL_PATH.get("tables") + "/" + filename
+            self._exec_ddls(file_dir=filename)
         
         for filename in procedure_filenames:
             logger.info(f"creating database procedures, running scripts in {settings.DDL_PATH.get('procedures')}")
-            self._exec_ddls(filename=filename)
+            filename = settings.DDL_PATH.get("procedures") + "/" + filename
+            self._exec_ddls(file_dir=filename)
 
             
-    def _exec_ddls(self, filename):
+    def _exec_ddls(self, file_dir):
         
         """
         reads a sql filename and executes the file
         while executing commands, these exceptions might occur:
         ProgrammingError, OperationalError, IntegrityError, DataError, NotSupportedError
         """
-
-        sql_file = open(filename, "r")
+        
+        sql_file = open(file_dir, "r")
         sql_commands = sql_file.read()
         sql_file.close()
 

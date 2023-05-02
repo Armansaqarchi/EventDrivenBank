@@ -12,6 +12,10 @@ level = getattr(logging, settings.LOGGING["level"]),
 
 logger = logging.getLogger(__name__)
 
+# creating console handler to change log format
+ch = logging.StreamHandler()
+
+
 def main():
 
     sys.path.append(settings.BASE_DIR)
