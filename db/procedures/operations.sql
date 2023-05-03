@@ -89,17 +89,18 @@ AS $$
             if NOT EXISTS user_exist THEN
                 out_value := FALSE;
                 RETURN;
+            END IF;
         END IF;
 
         IF type = 'deposit' OR type = 'interest_payment' THEN
             --do deposit things
             from_who := NULL;
             recipient := username;
-        ELSE IF type = 'withdraw' THEN
+        ELSEIF type = 'withdraw' THEN
             --do withdraw things
             from_who := username;
             recipient := NULL;
-        ELSE IF type = 'transfer' THEN
+        ELSEIF type = 'transfer' THEN
             -- do transfer things
             from_who := username;
             recipient := to_who;
@@ -121,60 +122,60 @@ AS $$
     DECLARE accountNumber VARCHAR(50);
     BEGIN
         --getting last login-log username
-        username := SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
-        accountNumber = SELECT accountNumber FROM account WHERE username = username;
-        balance := SELECT amount FROM latest_balances WHERE accountNumber = accountNumber;
-        RETURN;
+        EXECUTE 'SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1' INTO username;
+        EXECUTE 'SELECT accountNumber FROM account WHERE username = username' INTO accountNumber;
+        EXECUTE 'SELECT amount FROM latest_balances WHERE accountNumber = accountNumber' INTO balance;
     END;
 $$;
 
 ------------------------------------------------------------------------------------------------------------------
 
 
-CREATE OR REPLACE FUNCTION do_transaction(IN type VARCHAR(50),IN from_who VARCHAR(50),IN to_who VARCHAR(50),IN event_amount int, OUT out_value) RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION do_transaction(type VARCHAR(50), from_who VARCHAR(50), to_who VARCHAR(50), event_amount int) RETURNS BOOLEAN
 AS $$
-    DECLARE
-    record ROW;
+    declare balance BIGINT;
 
     BEGIN
 
         IF type = 'deposit' THEN
             --update deposit
-            UPDATE latest_balances SET amount = event_amount + amount WHERE accountNumber = to_who
+            UPDATE latest_balances SET amount = event_amount + amount WHERE accountNumber = to_who;
+            IF ROW_COUNT = 0 THEN
+                RETURN FALSE;
+            RETURN TRUE;
 
         -----------------------------------
         ELSE IF type = 'withdraw' THEN
             --update deposit
-            IF event_amount > SELECT amount FROM latest_balances WHERE accountNumber = to_who THEN
-                record := SELECT * FROM account WHERE accountNumber = to_who;
+            IF event_amount > SELECT amount FROM latest_balances WHERE accountNumber = from_who THEN
+                
                 IF type = 'client' THEN
                     out_value := 'failed to complete transaction, account balance insufficient';
-                    RETURN;
+                    RETURN FALSE;
                 
                 -- according to instructions, transactions will be executed for employees anywhere
-                UPDATE latest_balances SET amount = amount - event_amount WHERE accountNumber = record.accountNumber;
+                UPDATE latest_balances SET amount = amount - event_amount WHERE accountNumber = from_who;
                 END IF;
             END IF;
         ------------------------------------
         ELSE IF type = 'interest_payment' THEN
             --update deposit
-            record := SELECT * FROM account WHERE accountNumber = event_data.to;
             IF type = 'employee' THEN
                 out_value := 'no interest_payment for employee';
-                RETURN;
+                RETURN FALSE;
             END IF;
-            UPDATE latest_balances SET amount = amount*record.interest_rate;
+            UPDATE latest_balances SET amount = amount*0.05;
         ------------------------------------
         ELSE IF type = 'transfer' THEN
             --update deposit
-            record = SELECT * FROM latest_balances WHERE accountNumber = from_who;
-            IF record.amount > event_amount THEN
+            EXEcUTE 'SELECT balance FROM latest_balances WHERE accountNumber = from' INTO balance USING from_who; 
+            IF balance > event_amount THEN
                 UPDATE latest_balances SET amount = amount + event_amount WHERE accountNumber = to_who;
                 UPDATE latest_balances SET amoutn = amount - event_amount WHERE accountNumber = from_who;
                 out_value := 'successful transfer'
-                RETURN;
+                RETURN TRUE;
             out_value := 'something went wrong while performing the transaction'
-            RETURN;
+            RETURN FALSE;
             END IF;
         END IF;
         ------------------------------------
@@ -231,8 +232,7 @@ AS $$
         EXCEPTION
             WHEN others THEN
                 RAISE NOTICE 'there is something wrong with creating snapshot_id table : %s' SQLERRM;
-        out_value := TRUE
-        RETURN
+        out_value := TRUE;
+        RETURN;
     END;
-
 $$;
