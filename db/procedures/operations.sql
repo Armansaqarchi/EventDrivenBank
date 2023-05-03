@@ -136,21 +136,20 @@ AS $$
     declare balance BIGINT;
 
     BEGIN
-
         IF type = 'deposit' THEN
             --update deposit
             UPDATE latest_balances SET amount = event_amount + amount WHERE accountNumber = to_who;
             IF ROW_COUNT = 0 THEN
                 RETURN FALSE;
             RETURN TRUE;
+            END IF;
 
         -----------------------------------
-        ELSE IF type = 'withdraw' THEN
+        ELSEIF type = 'withdraw' THEN
             --update deposit
-            IF event_amount > SELECT amount FROM latest_balances WHERE accountNumber = from_who THEN
-                
+            EXECUTE 'SELECT amount from latest_balances WHERE accountNumber = from_who' INTO balance USING from_who;
+            IF event_amount > balance THEN
                 IF type = 'client' THEN
-                    out_value := 'failed to complete transaction, account balance insufficient';
                     RETURN FALSE;
                 
                 -- according to instructions, transactions will be executed for employees anywhere
@@ -158,34 +157,37 @@ AS $$
                 END IF;
             END IF;
         ------------------------------------
-        ELSE IF type = 'interest_payment' THEN
+        ELSEIF type = 'interest_payment' THEN
             --update deposit
             IF type = 'employee' THEN
-                out_value := 'no interest_payment for employee';
                 RETURN FALSE;
             END IF;
-            UPDATE latest_balances SET amount = amount*0.05;
+            UPDATE latest_balances SET amount = amount*0.05 WHERE accountNumber = to_who;
         ------------------------------------
-        ELSE IF type = 'transfer' THEN
+        ELSEIF type = 'transfer' THEN
             --update deposit
-            EXEcUTE 'SELECT balance FROM latest_balances WHERE accountNumber = from' INTO balance USING from_who; 
+            EXECUTE 'SELECT balance FROM latest_balances WHERE accountNumber = from' INTO balance USING from_who;
             IF balance > event_amount THEN
                 UPDATE latest_balances SET amount = amount + event_amount WHERE accountNumber = to_who;
                 UPDATE latest_balances SET amoutn = amount - event_amount WHERE accountNumber = from_who;
-                out_value := 'successful transfer'
                 RETURN TRUE;
-            out_value := 'something went wrong while performing the transaction'
             RETURN FALSE;
             END IF;
         END IF;
         ------------------------------------
     END;
-
-
 $$ LANGUAGE plpgsql;
 
 -----------------------------------------------------------------------------------------------------------------
 
+
+
+CREATE TYPE transaction_type as (
+    type VARCHAR(20),
+    from_who VARCHAR(17),
+    to_who VARCHAR(17),
+    amount VARCHAR(17)
+);
 
 -- updates all the events occured after the last snapshot
 -- takes the events first, in descending order
@@ -193,12 +195,13 @@ $$ LANGUAGE plpgsql;
 -- this architecture may cause performance optimization,
 -- but it would be better to store these events in somewhere in ram
 -- like most of the dedicated libraries do (e.g kafka)
-CREATE OR REPLACE PROCEDURE update_balance(OUT out_value)
+CREATE OR REPLACE PROCEDURE update_balance(OUT out_value VARCHAR(50))
 LANGUAGE plpgsql
 AS $$
     DECLARE least_timestamp VARCHAR(50);
     events REFCURSOR;
-    record ROW;
+    record transaction_type;
+
 
     BEGIN
         least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
