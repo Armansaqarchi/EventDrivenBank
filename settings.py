@@ -14,8 +14,8 @@ db = {
     "HOST" : "127.0.0.1",
     "DATABASE" : "event_driven",
     "PORT" : "5432",
-    "USER" : "mahan",
-    "PASSWORD" : "test123123"
+    "USER" : "Arman",
+    "PASSWORD" : "Armans8118"
 }
 
 

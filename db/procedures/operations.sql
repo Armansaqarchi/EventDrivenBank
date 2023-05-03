@@ -56,12 +56,12 @@ $$;
 ------------------------------------------------------------------------------------------------------------------
 
 
-CREATE PROCEDURE user_exists(IN username VARCHAR, OUT user_exists)
+CREATE PROCEDURE user_exists(IN username VARCHAR, OUT user_exists BOOLEAN)
 LANGUAGE plpgsql
 AS $$
     BEGIN
         --checks if the user exists
-        user_exists := SELECT EXISTS (SELECT * FROM account WHERE username = username);
+        EXECUTE 'SELECT EXISTS (SELECT * FROM account WHERE username = username)' INTO user_exists using username;
         RETURN;
     END;
 $$;
@@ -69,39 +69,44 @@ $$;
 ------------------------------------------------------------------------------------------------------------------
 
 -- creates the event based on the type passed as argument
-CREATE OR REPLACE PROCEDURE make_transaction(amount NUMERIC(18, 0), type STATUS, to_who VARCHAR(50))
+CREATE OR REPLACE PROCEDURE make_transaction(IN amount NUMERIC(18, 0),IN type STATUS,IN to_who VARCHAR(50), OUT out_value BOOLEAN)
 LANGUAGE plpgsql
 AS $$
     
     DECLARE transaction_time TIMESTAMP;
-    DECLARE username VARCHAR(50);
-    DECLARE from VARCHAR(50);
-    DECLARE recipient VARCAHR(50);
+    username VARCHAR(50);
+    from_who VARCHAR(50);
+    recipient VARCHAR(50);
+    user_exist BOOLEAN;
+    
     BEGIN
-        username = SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1;
+        EXECUTE 'SELECT username FROM login_log ORDER BY login_time DESC LIMIT 1' INTO username;
         transaction_time := CURRENT_TIMESTAMP;
 
         IF to_who <> NULL THEN
             --check username exists
-            IF NOT EXISTS EXECUTE user_exists(to_who) THEN
+            EXECUTE user_exists(to_who, user_exist);
+            if NOT EXISTS user_exist THEN
+                out_value := FALSE;
                 RETURN;
         END IF;
 
         IF type = 'deposit' OR type = 'interest_payment' THEN
             --do deposit things
-            from := NULL;
+            from_who := NULL;
             recipient := username;
         ELSE IF type = 'withdraw' THEN
             --do withdraw things
-            from := username;
+            from_who := username;
             recipient := NULL;
         ELSE IF type = 'transfer' THEN
             -- do transfer things
-            from := username;
-            recipient := to;
+            from_who := username;
+            recipient := to_who;
         END IF;
 
-        EXECUTE create_transaction(type, from, recipient, amount)
+        EXECUTE create_transaction(type, from_who, recipient, amount);
+        out_value := TRUE;
         RETURN;
     END;
 $$;

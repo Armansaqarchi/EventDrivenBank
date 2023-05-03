@@ -116,6 +116,7 @@ class UtilizeManagement:
         sql_commands = sql_file.read()
         sql_file.close()
         try:
+            logger.info(f"running sql file {file_dir}")
             cursor = self.connection.cursor()
             cursor.execute(sql_commands)
         except errors.DuplicateObject as e:
