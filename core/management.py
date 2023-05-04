@@ -71,7 +71,8 @@ class UtilizeManagement:
 
         if subcommand == "startapp":
             self.connection = self._connect_database()
-            application_input = AppInput(connection= self.connection)
+            AppInput.conn = self.connection
+            application_input = AppInput()
             while True:
                 application_input.login_menu()      
         

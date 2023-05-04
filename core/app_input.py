@@ -13,9 +13,9 @@ class AppInput:
 
     conn = None
 
-    def __init__(self, connection : connection) -> None:
+    def __init__(self) -> None:
         self.logger = logger
-        conn = connection
+        
 
 
 
@@ -84,6 +84,7 @@ class AppInput:
                     print(cursor.fetchone()[0])
                     cursor.close()
                 elif choice == 4:
+                    AppInput.conn.close()
                     sys.exit(0)
                     
 
@@ -99,18 +100,17 @@ class AppInput:
         choice = self.get_input(settings.LOGIN_MENU)
 
         if choice == 1:
-            username = input("enter username")
-            password = input("enter password")
+            username = input("enter username: ")
+            password = input("enter password: ")
             cursor = AppInput.conn.cursor()
-            cursor.callproc("LOGIN", [username, password])
+            cursor.execute("CALL login(%s, %s)", (username, password))
             logged_in = cursor.fetchone()[0]
 
             if(logged_in):
                 print("successfully logged in")
                 self.main_menu()
         elif choice == 2:
-            #accountNumber NUMERIC(16, 0), password VARCHAR(60),
-#firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type USER_STATUS, interest_rate INT
+
             print("enter the following informations :")
             account_number = input("Account number :")
             password = input("password")
@@ -136,6 +136,8 @@ class AppInput:
             else:
                 print("invalid information")
         elif choice == 3:
+            AppInput.conn.close()
+            sys.exit(0)
 
     
     def _check_date_valids(birth_of_date):

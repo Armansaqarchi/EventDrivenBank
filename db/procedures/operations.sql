@@ -6,7 +6,7 @@ AS $$
     DECLARE hashed_password VARCHAR(60);
     BEGIN
         IF EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM birth_of_date) > 13 THEN
-            hashed_password := DIGEST(password, 'sha256');
+            EXECUTE "SELECT DIGEST(password, 'sha256')::TEXT" INTO hashed_password using password;
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, type, interest_rate);
             out_value := TRUE
@@ -43,10 +43,11 @@ AS $$
 DECLARE 
     hashed_password TEXT;
 BEGIN
-    hashed_password := digest(password, 'sha256');
+    EXECUTE "SELECT DIGEST(password, 'sha256')::TEXT" INTO hashed_password using password;
     IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
         result := TRUE;
+        EXECUTE login_log(username);
         RETURN;
     ELSE
         result := FALSE;
