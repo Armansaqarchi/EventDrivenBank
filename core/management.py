@@ -72,7 +72,8 @@ class UtilizeManagement:
         if subcommand == "startapp":
             self.connection = self._connect_database()
             application_input = AppInput(connection= self.connection)
-            application_input.login_menu()      
+            while True:
+                application_input.login_menu()      
         
         elif subcommand == "help":
             commands = self._help_text()
@@ -101,6 +102,7 @@ class UtilizeManagement:
             
             filename = settings.DDL_PATH.get("procedures") + "/" + filename
             self._exec_ddls(file_dir=filename)
+        self.connection.commit()
 
             
     def _exec_ddls(self, file_dir):

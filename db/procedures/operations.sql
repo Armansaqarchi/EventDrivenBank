@@ -1,7 +1,7 @@
 --takes account information, and creates the accoun
 --after the creation is done, a trigger called 'make_username' is called to resolve the username 
 CREATE OR REPLACE PROCEDURE Register(accountNumber NUMERIC(16, 0), password VARCHAR(60),
-firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type USER_STATUS, interest_rate INT)
+firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type USER_STATUS, interest_rate INT, OUT out_value BOOLEAN)
 AS $$
     DECLARE hashed_password VARCHAR(60);
     BEGIN
@@ -9,6 +9,7 @@ AS $$
             hashed_password := DIGEST(password, 'sha256');
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, type, interest_rate);
+            out_value := TRUE
             RETURN;
         END IF;
     END;
@@ -36,7 +37,7 @@ $$ LANGUAGE plpgsql;
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
-CREATE OR REPLACE PROCEDURE Login(IN username VARCHAR(50), IN password VARCHAR(50))
+CREATE OR REPLACE PROCEDURE Login(IN username VARCHAR(50), IN password VARCHAR(50), OUT result BOOLEAN)
 LANGUAGE plpgsql
 AS $$
 DECLARE 
@@ -45,8 +46,10 @@ BEGIN
     hashed_password := digest(password, 'sha256');
     IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
+        result := TRUE;
         RETURN;
     ELSE
+        result := FALSE;
         RAISE NOTICE 'username or password is incorrect';
     END IF;
 END;
@@ -204,22 +207,22 @@ AS $$
 
 
     BEGIN
-        least_timestamp := SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1;
+        EXECUTE 'SELECT snapshot_timestamp FROM snapshot_log ORDER BY snapshot_timestamp DESC LIMIT 1' INTO least_timestamp;
         -- reference to the first tuple in events
-        OPEN events FOR SELECT * FROM transaction WHERE transaction_time > least_timestamp ORDER BY transaction_time ASC
+        OPEN events FOR SELECT * FROM transaction WHERE transaction_time > least_timestamp ORDER BY transaction_time ASC;
         LOOP
             FETCH events INTO record;
             -- leaves the loop if no row is available
             EXIT WHEN NOT FOUND;
 
-            EXECUTE do_transaction(record.type, record.from, record.to, record.amount)
-            END IF;
+            EXECUTE do_transaction(record.type, record.from, record.to, record.amount);
+            
         END LOOP;
 
         -- free space in ram
         CLOSE events;
-        out_value := 'successfully updated events'
-        RETURN 
+        out_value := 'successfully updated events';
+        RETURN;
     END;
 $$;
 
@@ -231,10 +234,10 @@ LANGUAGE plpgsql
 AS $$
     BEGIN
         EXECUTE 'CREATE TABLE snapshot_' || id ||'(account_number VARCHAR(16), amount int)';
-        EXECUTE 'INSERT INTO snapshot_' || id || '(account_number VARCHAR(16), amount int) VALUES SELECT * FROM latest_balances'
+        EXECUTE 'INSERT INTO snapshot_' || id || '(account_number VARCHAR(16), amount int) VALUES SELECT * FROM latest_balances';
         EXCEPTION
             WHEN others THEN
-                RAISE NOTICE 'there is something wrong with creating snapshot_id table : %s' SQLERRM;
+                RAISE NOTICE 'there is something wrong with creating snapshot_id table';
         out_value := TRUE;
         RETURN;
     END;

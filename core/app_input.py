@@ -1,5 +1,6 @@
 import sys
 import settings
+import time
 
 from start import logger
 from psycopg2.extensions import connection
@@ -25,9 +26,11 @@ class AppInput:
         """
         while True:
             # number of choice
-            num = int()
-            for arg in args:
-                print(num + f"-{arg}")
+            num = 1
+            
+            for arg in args[0]:
+                print(str(num) + f"-{arg}")
+                num += 1
             try:
                 choice = int(input())
                 # number of choices available
@@ -95,9 +98,56 @@ class AppInput:
         """
         choice = self.get_input(settings.LOGIN_MENU)
 
-    
-            
+        if choice == 1:
+            username = input("enter username")
+            password = input("enter password")
+            cursor = AppInput.conn.cursor()
+            cursor.callproc("LOGIN", [username, password])
+            logged_in = cursor.fetchone()[0]
 
+            if(logged_in):
+                print("successfully logged in")
+                self.main_menu()
+        elif choice == 2:
+            #accountNumber NUMERIC(16, 0), password VARCHAR(60),
+#firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type USER_STATUS, interest_rate INT
+            print("enter the following informations :")
+            account_number = input("Account number :")
+            password = input("password")
+            firstname = input("firstname")
+            lastname = input("lastname")
+            nationalID = input("nationalID")
+            birth_of_date = input("birth_of_date(in format yyyy-mm-dd)")
+
+            print("choose type of user")
+            type = self.get_input((("client", "employee")))
+
+            interest_rate = 0.05
+            if not self._check_date_valids(birth_of_date):
+                cursor.callproc("REGISTER", [account_number, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate])
+                res = cursor.fetchone()[0]
+                if res == True:
+                    time.sleep(0.3)
+                    cursor.execute("SELECT username FROM accounts where accountNumber = %s" %(account_number))
+                    username = cursor.fetchone()[0]
+                    print(f"registeration successfully done, here is you username : {username}")
+                else:
+                    print("something went wrong while registering the user")    
+            else:
+                print("invalid information")
+        elif choice == 3:
+
+    
+    def _check_date_valids(birth_of_date):
+        try:
+            numbers = birth_of_date.split("-")
+            year = numbers[0]
+            month = numbers[1]
+            day = numbers[2]
+        except ValueError:
+            return False
+
+        return  True
 
 
 
