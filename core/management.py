@@ -125,7 +125,9 @@ class UtilizeManagement:
         except errors.DuplicateObject as e:
             logger.warning("entity already exists : ", str(e))
             pass
-
+        except errors.DuplicateTable as e:
+            logger.warning("entity already exists : ", str(e))
+            pass
 
 
     def _cron_configuration():

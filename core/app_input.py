@@ -103,32 +103,48 @@ class AppInput:
             username = input("enter username: ")
             password = input("enter password: ")
             cursor = AppInput.conn.cursor()
-            cursor.execute("CALL login(%s, %s)", (username, password))
-            logged_in = cursor.fetchone()[0]
 
-            if(logged_in):
+            cursor.execute("CALL login(%s, %s, %s)", [username, password, None])
+
+            res = cursor.fetchone()[0]
+
+
+            if res.split(",")[0]:
                 print("successfully logged in")
                 self.main_menu()
+
+            print("invalid username or password")
+
+
         elif choice == 2:
 
             print("enter the following informations :")
             account_number = input("Account number :")
-            password = input("password")
-            firstname = input("firstname")
-            lastname = input("lastname")
-            nationalID = input("nationalID")
-            birth_of_date = input("birth_of_date(in format yyyy-mm-dd)")
+            password = input("password : ")
+            firstname = input("firstname : ")
+            lastname = input("lastname : ")
+            nationalID = input("nationalID : ")
+            birth_of_date = input("birth_of_date(in format yyyy-mm-dd) : ")
 
             print("choose type of user")
             type = self.get_input((("client", "employee")))
 
             interest_rate = 0.05
-            if not self._check_date_valids(birth_of_date):
-                cursor.callproc("REGISTER", [account_number, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate])
+            if self._check_date_valids(birth_of_date):
+                cursor = AppInput.conn.cursor()
+                
+                
+                cursor.execute("CALL register(%s::numeric, %s::varchar, %s::varchar, %s::varchar, %s::numeric, %s::date, %s::user_status, %s::float, %s::varchar);", 
+                                                                [account_number, password, firstname,
+                                                                lastname, nationalID, birth_of_date, str('CLIENT' if type == 1 else 'EMPLOYEE'), interest_rate, None])
+                
                 res = cursor.fetchone()[0]
-                if res == True:
+                print(res)
+                
+                if res.split(",")[0] == 'True':
                     time.sleep(0.3)
-                    cursor.execute("SELECT username FROM accounts where accountNumber = %s" %(account_number))
+                    AppInput.conn.commit()
+                    cursor.execute("SELECT username FROM account where accountNumber = %s" %(account_number))
                     username = cursor.fetchone()[0]
                     print(f"registeration successfully done, here is you username : {username}")
                 else:
@@ -140,12 +156,12 @@ class AppInput:
             sys.exit(0)
 
     
-    def _check_date_valids(birth_of_date):
+    def _check_date_valids(self, birth_of_date):
         try:
             numbers = birth_of_date.split("-")
-            year = numbers[0]
-            month = numbers[1]
-            day = numbers[2]
+            year = int(numbers[0])
+            month = int(numbers[1])
+            day = int(numbers[2])
         except ValueError:
             return False
 
