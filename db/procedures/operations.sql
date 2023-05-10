@@ -1,12 +1,13 @@
 --takes account information, and creates the accoun
 --after the creation is done, a trigger called 'make_username' is called to resolve the username 
-CREATE OR REPLACE PROCEDURE Register(accountNumber NUMERIC(16, 0), password VARCHAR(60),
-firstname VARCHAR(60), lastname VARCHAR(60), nationalID NUMERIC(10, 0), birth_of_date DATE, type USER_STATUS, interest_rate INT, OUT out_value BOOLEAN)
+
+CREATE OR REPLACE PROCEDURE Register(IN accountNumber NUMERIC(16, 0), IN password VARCHAR(60),
+IN firstname VARCHAR(60),IN lastname VARCHAR(60),IN nationalID NUMERIC(10, 0),IN birth_of_date DATE,IN type USER_STATUS,IN interest_rate INT, OUT out_value BOOLEAN)
 AS $$
     DECLARE hashed_password VARCHAR(60);
     BEGIN
         IF EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM birth_of_date) > 13 THEN
-            EXECUTE "SELECT DIGEST(password, 'sha256')::TEXT" INTO hashed_password using password;
+            hashed_password = digest(password, 'sha256');
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, type, interest_rate);
             out_value := TRUE
@@ -20,7 +21,7 @@ $$ LANGUAGE plpgsql;
 
 
 --this function adds the logged in username to the login log table
-CREATE FUNCTION login_log(username VARCHAR(50))
+CREATE OR REPLACE FUNCTION login_log(username VARCHAR(50))
     RETURNS BOOLEAN
 AS $$
     BEGIN
@@ -37,17 +38,17 @@ $$ LANGUAGE plpgsql;
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
-CREATE OR REPLACE PROCEDURE Login(IN username VARCHAR(50), IN password VARCHAR(50), OUT result BOOLEAN)
+CREATE OR REPLACE PROCEDURE Login(IN login_username VARCHAR(50), IN login_password VARCHAR(50), OUT result BOOLEAN)
 LANGUAGE plpgsql
 AS $$
 DECLARE 
     hashed_password TEXT;
 BEGIN
-    EXECUTE "SELECT DIGEST(password, 'sha256')::TEXT" INTO hashed_password using password;
-    IF EXISTS(SELECT * FROM account WHERE username = username AND password = hashed_password) THEN
+    hashed_password = digest(login_password, 'sha256');
+    IF EXISTS(SELECT * FROM account WHERE account.username = login_username AND login_password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
         result := TRUE;
-        EXECUTE login_log(username);
+        EXECUTE login_log(login_username);
         RETURN;
     ELSE
         result := FALSE;
