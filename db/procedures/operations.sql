@@ -2,17 +2,18 @@
 --after the creation is done, a trigger called 'make_username' is called to resolve the username 
 
 CREATE OR REPLACE PROCEDURE Register(IN accountNumber NUMERIC(16, 0), IN password VARCHAR(60),
-IN firstname VARCHAR(60),IN lastname VARCHAR(60),IN nationalID NUMERIC(10, 0),IN birth_of_date DATE,IN type USER_STATUS,IN interest_rate INT, OUT out_value BOOLEAN)
+IN firstname VARCHAR(60),IN lastname VARCHAR(60),IN nationalID NUMERIC(10, 0),IN birth_of_date DATE,IN type USER_STATUS,IN interest_rate FLOAT, OUT out_value varchar(60))
 AS $$
-    DECLARE hashed_password VARCHAR(60);
+    DECLARE hashed_password VARCHAR(500);
     BEGIN
         IF EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM birth_of_date) > 13 THEN
             hashed_password = digest(password, 'sha256');
             INSERT INTO account(accountNumber, password, firstname, lastname, nationalID, birth_of_date, type, interest_rate)
             VALUES(accountNumber, hashed_password, firstname, lastname, nationalID, birth_of_date, type, interest_rate);
-            out_value := TRUE
+            out_value := 'True, successfully registered';
             RETURN;
         END IF;
+        out_value := 'False, you are not permitted to register as your age is under than 13';
     END;
 $$ LANGUAGE plpgsql;
 
@@ -38,7 +39,7 @@ $$ LANGUAGE plpgsql;
 
 
 --takes username and password, hashes the password and then if anything matched these two, loggin is done.
-CREATE OR REPLACE PROCEDURE Login(IN login_username VARCHAR(50), IN login_password VARCHAR(50), OUT result BOOLEAN)
+CREATE OR REPLACE PROCEDURE Login(IN login_username VARCHAR(50), IN login_password VARCHAR(50), OUT result VARCHAR)
 LANGUAGE plpgsql
 AS $$
 DECLARE 
@@ -47,12 +48,11 @@ BEGIN
     hashed_password = digest(login_password, 'sha256');
     IF EXISTS(SELECT * FROM account WHERE account.username = login_username AND login_password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
-        result := TRUE;
+        result := 'True, loggin successful!';
         EXECUTE login_log(login_username);
         RETURN;
     ELSE
-        result := FALSE;
-        RAISE NOTICE 'username or password is incorrect';
+        result := 'False, username or password may be incorrect';
     END IF;
 END;
 $$;

@@ -103,11 +103,13 @@ class AppInput:
             username = input("enter username: ")
             password = input("enter password: ")
             cursor = AppInput.conn.cursor()
-            test = bool()
-            cursor.execute("CALL login(%s, %s, %s)", (username, password, test))
-            logged_in = cursor.fetchone()[0]
 
-            if(logged_in):
+            cursor.execute("CALL login(%s, %s, %s)", [username, password, None])
+
+            res = cursor.fetchone()[0]
+
+
+            if res.split(",")[0]:
                 print("successfully logged in")
                 self.main_menu()
 
@@ -131,13 +133,18 @@ class AppInput:
             if self._check_date_valids(birth_of_date):
                 cursor = AppInput.conn.cursor()
                 
-                cursor.execute("CALL register(%s::numeric, %s::text, %s::text, %s::text, %s::text, %s::date, %s::user_status, %s::float, %s::Boolean)", 
+                
+                cursor.execute("CALL register(%s::numeric, %s::varchar, %s::varchar, %s::varchar, %s::numeric, %s::date, %s::user_status, %s::float, %s::varchar);", 
                                                                 [account_number, password, firstname,
-                                                                lastname, nationalID, birth_of_date, 'CLIENT' if type == 1 else 'EMPLOYEE', int(interest_rate), None])
+                                                                lastname, nationalID, birth_of_date, str('CLIENT' if type == 1 else 'EMPLOYEE'), interest_rate, None])
+                
                 res = cursor.fetchone()[0]
-                if res == True:
+                print(res)
+                
+                if res.split(",")[0] == 'True':
                     time.sleep(0.3)
-                    cursor.execute("SELECT username FROM accounts where accountNumber = %s" %(account_number))
+                    AppInput.conn.commit()
+                    cursor.execute("SELECT username FROM account where accountNumber = %s" %(account_number))
                     username = cursor.fetchone()[0]
                     print(f"registeration successfully done, here is you username : {username}")
                 else:

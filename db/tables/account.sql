@@ -1,18 +1,20 @@
 
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TYPE USER_STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
 
 -----------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS account(
-    username VARCHAR(60) UNIQUE,
+    username VARCHAR(120) UNIQUE,
     accountNumber NUMERIC(16, 0) UNIQUE,
-    password VARCHAR(200),
+    password VARCHAR(500),
     firstname VARCHAR(50),
     lastname VARCHAR(50),
     nationalID NUMERIC(10, 0),
     birth_of_date DATE,
     type USER_STATUS,
-    interest_rate INT NOT NULL
+    interest_rate FLOAT NOT NULL
 );
 
 -------------------------------------------------------
@@ -31,7 +33,7 @@ CREATE OR REPLACE FUNCTION make_username()
         DECLARE id VARCHAR(50);
         BEGIN
             id := nextval('number');
-            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-' || id;
+            UPDATE account SET username = NEW.firstname || '-' || NEW.lastname || '-' || id WHERE accountNumber = NEW.accountNumber;
             RETURN NEW;
         END;
 $$ LANGUAGE plpgsql;
