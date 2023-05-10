@@ -1,3 +1,4 @@
+
 CREATE TYPE USER_STATUS AS ENUM ('CLIENT', 'EMPLOYEE');
 
 -----------------------------------------------------
@@ -37,6 +38,6 @@ $$ LANGUAGE plpgsql;
 
 --------------------------------------------------------
 
-CREATE TRIGGER username AFTER INSERT ON account FOR EACH ROW
+CREATE OR REPLACE TRIGGER username AFTER INSERT ON account FOR EACH ROW
     EXECUTE FUNCTION make_username();
 

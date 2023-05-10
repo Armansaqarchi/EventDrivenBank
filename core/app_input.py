@@ -1,5 +1,6 @@
 import sys
 import settings
+import time
 
 from start import logger
 from psycopg2.extensions import connection
@@ -12,9 +13,9 @@ class AppInput:
 
     conn = None
 
-    def __init__(self, connection : connection) -> None:
+    def __init__(self) -> None:
         self.logger = logger
-        conn = connection
+        
 
 
 
@@ -25,9 +26,11 @@ class AppInput:
         """
         while True:
             # number of choice
-            num = int()
-            for arg in args:
-                print(num + f"-{arg}")
+            num = 1
+            
+            for arg in args[0]:
+                print(str(num) + f"-{arg}")
+                num += 1
             try:
                 choice = int(input())
                 # number of choices available
@@ -81,6 +84,7 @@ class AppInput:
                     print(cursor.fetchone()[0])
                     cursor.close()
                 elif choice == 4:
+                    AppInput.conn.close()
                     sys.exit(0)
                     
 
@@ -95,9 +99,66 @@ class AppInput:
         """
         choice = self.get_input(settings.LOGIN_MENU)
 
-    
-            
+        if choice == 1:
+            username = input("enter username: ")
+            password = input("enter password: ")
+            cursor = AppInput.conn.cursor()
+            test = bool()
+            cursor.execute("CALL login(%s, %s, %s)", (username, password, test))
+            logged_in = cursor.fetchone()[0]
 
+            if(logged_in):
+                print("successfully logged in")
+                self.main_menu()
+
+            print("invalid username or password")
+
+
+        elif choice == 2:
+
+            print("enter the following informations :")
+            account_number = input("Account number :")
+            password = input("password : ")
+            firstname = input("firstname : ")
+            lastname = input("lastname : ")
+            nationalID = input("nationalID : ")
+            birth_of_date = input("birth_of_date(in format yyyy-mm-dd) : ")
+
+            print("choose type of user")
+            type = self.get_input((("client", "employee")))
+
+            interest_rate = 0.05
+            if self._check_date_valids(birth_of_date):
+                cursor = AppInput.conn.cursor()
+                
+                cursor.execute("CALL register(%s::numeric, %s::text, %s::text, %s::text, %s::text, %s::date, %s::user_status, %s::float, %s::Boolean)", 
+                                                                [account_number, password, firstname,
+                                                                lastname, nationalID, birth_of_date, 'CLIENT' if type == 1 else 'EMPLOYEE', int(interest_rate), None])
+                res = cursor.fetchone()[0]
+                if res == True:
+                    time.sleep(0.3)
+                    cursor.execute("SELECT username FROM accounts where accountNumber = %s" %(account_number))
+                    username = cursor.fetchone()[0]
+                    print(f"registeration successfully done, here is you username : {username}")
+                else:
+                    print("something went wrong while registering the user")    
+            else:
+                print("invalid information")
+        elif choice == 3:
+            AppInput.conn.close()
+            sys.exit(0)
+
+    
+    def _check_date_valids(self, birth_of_date):
+        try:
+            numbers = birth_of_date.split("-")
+            year = int(numbers[0])
+            month = int(numbers[1])
+            day = int(numbers[2])
+        except ValueError:
+            return False
+
+        return  True
 
 
 
