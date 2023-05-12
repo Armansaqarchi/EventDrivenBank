@@ -63,7 +63,7 @@ class AppInput:
                     cursor= AppInput.conn.cursor()
                     cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'withdraw', None, None])
                     print(cursor.fetchone()[0])
-                    AppInput.conn.commit()
+                    
 
                 
                 elif choice == 2:
@@ -78,7 +78,7 @@ class AppInput:
                     cursor = AppInput.conn.cursor()
                     cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'transfer', account_number, None])
                     print(cursor.fetchone()[0])
-                    AppInput.conn.commit()
+                    
 
                 elif choice == 3:
                     # perform deposit
@@ -86,22 +86,25 @@ class AppInput:
                     cursor = AppInput.conn.cursor()
                     cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'deposit', None, None])
                     print(cursor.fetchone()[0])
-                    AppInput.conn.commit()
+                    
                     cursor.close()
                 elif choice == 4:
                     #perform check_balance
                     cusror = AppInput.conn.cursor()
-                    cursor.execute("CALL check_balance()")
+                    cursor.execute("CALL check_balance(%s::integer)", [None])
+                    print(f"you have total of {cursor.fetchone()[0]} in your bank account")
+                    
                 elif choice == 5:
                     if self.user.type == "CLIENT":
                         AppInput.conn.close()
                         sys.exit(0)
-                    else:
+                    # else:
                         #perform update_balances
-                elif choice == 6 and self.user.type == "EMPLOYEE":
-                    sys.exit(0)
 
+                # elif choice == 6 and self.user.type == "EMPLOYEE":
+                #     sys.exit(0)
 
+                AppInput.conn.commit()
 
         
 

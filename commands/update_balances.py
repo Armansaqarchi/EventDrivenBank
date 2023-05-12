@@ -2,6 +2,7 @@ from core.app_input import AppInput
 from start import logger
 from datetime import datetime
 
+
 def update_balances():
     """
     main function to handle updates,
@@ -12,10 +13,13 @@ def update_balances():
 
     connection = AppInput.conn
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM update_balance()")
+    cursor.execute("CALL update_balance()")
     if cursor.fetchone()[0]:
         logger.log(f"updates are done successfully at {datetime.now()}")
-        create_snapshot_id()
+        #creating snapshot_id tables, each table related to the last update balance occured
+        cursor.execute('CALL create_snapshot(%s::boolean)', [None])
+        AppInput.conn.commit()
+        return 
         
     
     logger.warning("there was an error while trying to update all the events, make sure that there is no leak in data consistancy, or use the events to fix it")
