@@ -13,7 +13,8 @@ def update_balances():
 
     connection = AppInput.conn
     cursor = connection.cursor()
-    cursor.execute("CALL update_balance()")
+    cursor.execute("CALL update_balance(%s::boolean)", [None])
+    
     if cursor.fetchone()[0]:
         logger.log(f"updates are done successfully at {datetime.now()}")
         #creating snapshot_id tables, each table related to the last update balance occured

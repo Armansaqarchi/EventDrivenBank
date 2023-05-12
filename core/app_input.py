@@ -41,9 +41,12 @@ class AppInput:
                 # validity of choice
                 if choice > num_of_choices or choice < 1:
                     raise InvalidChoiceException()
-            except (InvalidChoiceException or ValueError) as e:
+            except InvalidChoiceException as e:
                 message = f"the choice must be a number from 1 to {num_of_choices}"
-                print(message)    
+                print(message)
+            except ValueError as e:
+                message = f"the choice must be an integer"
+                print(message)
             else:
                 return choice
     
@@ -53,7 +56,8 @@ class AppInput:
         invokes input function and performs main operations
         """
         while(True):
-                choice = self.get_input(settings.MAIN_MENU if self.user.type == "CLIENT" else settings.MAIN_MENU + ("Update balance"))
+            try:
+                choice = self.get_input(settings.MAIN_MENU if self.user.type == "CLIENT" else settings.MAIN_MENU__EMPLOYEE)
 
                 if choice == 1:
                     # perform withdraw
@@ -90,7 +94,7 @@ class AppInput:
                     cursor.close()
                 elif choice == 4:
                     #perform check_balance
-                    cusror = AppInput.conn.cursor()
+                    cursor = AppInput.conn.cursor()
                     cursor.execute("CALL check_balance(%s::integer)", [None])
                     print(f"you have total of {cursor.fetchone()[0]} in your bank account")
                     
@@ -98,14 +102,17 @@ class AppInput:
                     if self.user.type == "CLIENT":
                         AppInput.conn.close()
                         sys.exit(0)
-                    # else:
-                        #perform update_balances
+                    else:
+                        cursor = AppInput.conn.cursor()
+                        cursor.execute("CALL update_balance(%s::boolean)", [None])
+                        print("successfully updated")
 
-                # elif choice == 6 and self.user.type == "EMPLOYEE":
-                #     sys.exit(0)
+                elif choice == 6 and self.user.type == "EMPLOYEE":
+                     sys.exit(0)
 
                 AppInput.conn.commit()
-
+            except Exception:
+                print('failed to make the transaction')
         
 
     
@@ -128,7 +135,7 @@ class AppInput:
 
             if res.split(",")[0] == "True":
                 print("successfully logged in")
-                cursor.execute("SELECT username, type FROM account where username = %s" %(username))
+                cursor.execute("SELECT username, type FROM account where username = %s", [username])
                 res = cursor.fetchone()
                 self.user = User(type = res[1], username=res[0])
                 self.main_menu()

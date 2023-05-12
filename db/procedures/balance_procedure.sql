@@ -1,10 +1,14 @@
-CREATE OR REPLACE FUNCTION make_new_balance()
-    RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION public.make_new_balance()
+    RETURNS trigger
+    LANGUAGE 'plpgsql'
+    COST 100
+    VOLATILE NOT LEAKPROOF
+AS $BODY$
         BEGIN
             INSERT INTO latest_balances(accountNumber, amount) VALUES (NEW.accountNumber, 0);
             RETURN NEW;
         END;
-$$ LANGUAGE plpgsql;
+$BODY$;
 
 
 
