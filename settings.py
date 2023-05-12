@@ -37,7 +37,7 @@ DDL_PATH = {
     "tables" : path.join(BASE_DIR, "db/tables"),
     "procedures" : path.join(BASE_DIR, "db/procedures")}
 
-MAIN_MENU = ('withdraw', 'transfer', 'deposit', 'interest_payment', 'exit')
+MAIN_MENU = ('withdraw', 'transfer', 'deposit', 'check_balance' 'exit')
 
 LOGIN_MENU = ('login', 'register', "quit")
 

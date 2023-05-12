@@ -44,13 +44,18 @@ LANGUAGE plpgsql
 AS $$
 DECLARE 
     hashed_password TEXT;
+    login_log_res varchar;
 BEGIN
     hashed_password = digest(login_password, 'sha256');
-    IF EXISTS(SELECT * FROM account WHERE account.username = login_username AND login_password = hashed_password) THEN
+    IF EXISTS(SELECT * FROM account WHERE account.username = login_username AND password = hashed_password) THEN
         -- Call your function here to do something if the login is successful
         result := 'True, loggin successful!';
-        EXECUTE login_log(login_username);
+        select login_log(login_username) into login_log_res;
+        IF login_log_res <> True then
+            result := 'something went wrong during authentication';
+        END IF;
         RETURN;
+
     ELSE
         result := 'False, username or password may be incorrect';
     END IF;
@@ -74,7 +79,7 @@ $$;
 ------------------------------------------------------------------------------------------------------------------
 
 -- creates the event based on the type passed as argument
-CREATE OR REPLACE PROCEDURE make_transaction(IN amount NUMERIC(18, 0),IN type STATUS,IN to_who VARCHAR(50), OUT out_value BOOLEAN)
+CREATE OR REPLACE PROCEDURE make_transaction(IN amount NUMERIC(18, 0),IN type STATUS,IN to_who VARCHAR(50), OUT out_value varchar)
 LANGUAGE plpgsql
 AS $$
     
@@ -92,12 +97,12 @@ AS $$
             --check username exists
             EXECUTE user_exists(to_who, user_exist);
             if NOT EXISTS user_exist THEN
-                out_value := FALSE;
+                out_value := 'user does not exist';
                 RETURN;
             END IF;
         END IF;
 
-        IF type = 'deposit' OR type = 'interest_payment' THEN
+        IF type = 'deposit' OR type = 'interest' THEN
             --do deposit things
             from_who := NULL;
             recipient := username;
@@ -111,8 +116,8 @@ AS $$
             recipient := to_who;
         END IF;
 
-        EXECUTE create_transaction(type, from_who, recipient, amount);
-        out_value := TRUE;
+        CALL create_transaction(type, from_who, recipient, amount);
+        out_value := 'transaction successfully completed';
         RETURN;
     END;
 $$;

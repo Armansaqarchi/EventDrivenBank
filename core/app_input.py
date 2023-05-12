@@ -4,6 +4,7 @@ import time
 
 from start import logger
 from psycopg2.extensions import connection
+from .user import User
 from psycopg2 import(
     ProgrammingError
 )
@@ -12,9 +13,11 @@ from psycopg2 import(
 class AppInput:
 
     conn = None
+    user = None
 
     def __init__(self) -> None:
         self.logger = logger
+        
         
 
 
@@ -50,46 +53,56 @@ class AppInput:
         invokes input function and performs main operations
         """
         while(True):
-            try:
-                choice = self.get_input(settings.MAIN_MENU)
+                choice = self.get_input(settings.MAIN_MENU if self.user.type == "CLIENT" else settings.MAIN_MENU + ("Update balance"))
 
                 if choice == 1:
                     # perform withdraw
-                    amount = input("enter the amount of funds you would like to withdraw")
+                    amount = input("enter the amount of funds you would like to withdraw : ")
                     logger.info("preparing for withdraw transaction")
 
                     cursor= AppInput.conn.cursor()
-                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'withdraw', None))
+                    cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'withdraw', None, None])
                     print(cursor.fetchone()[0])
+                    AppInput.conn.commit()
 
                 
                 elif choice == 2:
                     # perform transfer
                     amount = input("enter the amount of funds you would like to transfer")
-                    logger.info("preparing for transfer transaction")
                     account_number =  input("which account number you would like to transfer to?")
 
-                    if len(account_number) != 16 :
-                        print("invalid account number, the number must be a combination of 16 characters")
-                        continue
+                    # if len(account_number) != 16 :
+                    #     print("invalid account number, the number must be a combination of 16 characters")
+                    #     continue
 
                     cursor = AppInput.conn.cursor()
-                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'transfer', account_number))
+                    cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'transfer', account_number, None])
                     print(cursor.fetchone()[0])
+                    AppInput.conn.commit()
 
                 elif choice == 3:
+                    # perform deposit
                     amount = input("amount of money to deposit?")
                     cursor = AppInput.conn.cursor()
-                    cursor.execute("SELECT * FROM make_transaction(%s, %s, %s)" %(amount, 'deposit'))
+                    cursor.execute("CALL make_transaction(%s::numeric, %s::status, %s::numeric, %s::varchar)", [amount, 'deposit', None, None])
                     print(cursor.fetchone()[0])
+                    AppInput.conn.commit()
                     cursor.close()
                 elif choice == 4:
-                    AppInput.conn.close()
+                    #perform check_balance
+                    cusror = AppInput.conn.cursor()
+                    cursor.execute("CALL check_balance()")
+                elif choice == 5:
+                    if self.user.type == "CLIENT":
+                        AppInput.conn.close()
+                        sys.exit(0)
+                    else:
+                        #perform update_balances
+                elif choice == 6 and self.user.type == "EMPLOYEE":
                     sys.exit(0)
-                    
 
-            except ProgrammingError as e:
-                logger.error("failed to fire the function or database may have been improperly configured")
+
+
         
 
     
@@ -107,10 +120,14 @@ class AppInput:
             cursor.execute("CALL login(%s, %s, %s)", [username, password, None])
 
             res = cursor.fetchone()[0]
+            print(res)
 
 
-            if res.split(",")[0]:
+            if res.split(",")[0] == "True":
                 print("successfully logged in")
+                cursor.execute("SELECT username, type FROM account where username = %s" %(username))
+                res = cursor.fetchone()
+                self.user = User(type = res[1], username=res[0])
                 self.main_menu()
 
             print("invalid username or password")
@@ -144,9 +161,13 @@ class AppInput:
                 if res.split(",")[0] == 'True':
                     time.sleep(0.3)
                     AppInput.conn.commit()
-                    cursor.execute("SELECT username FROM account where accountNumber = %s" %(account_number))
-                    username = cursor.fetchone()[0]
-                    print(f"registeration successfully done, here is you username : {username}")
+                    cursor.execute("SELECT username, type FROM account where accountNumber = %s" %(account_number))
+                    res = cursor.fetchone()
+                    username = res[0]
+                    type = res[1]
+                    print(f"registeration successfully done, here is you username : {username} of type : {type}")
+                    
+                    
                 else:
                     print("something went wrong while registering the user")    
             else:
