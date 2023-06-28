@@ -193,23 +193,28 @@ CREATE OR REPLACE FUNCTION public.do_transaction(
     VOLATILE PARALLEL UNSAFE
 AS $BODY$
     declare balance BIGINT;
+	declare person_type varchar(50);
 
     BEGIN
+
         IF type = 'deposit' THEN
             --update deposit
             UPDATE latest_balances SET amount = event_amount + amount WHERE accountNumber = to_account;
         -----------------------------------
         ELSEIF type = 'withdraw' THEN
+			
             --update deposit
             EXECUTE format('SELECT amount from latest_balances WHERE accountNumber = %s', from_account) INTO balance;
-            IF event_amount > balance THEN
-                IF type = 'CLIENT' THEN
-                    RETURN;
+			EXECUTE format('SELECT type from account WHERE accountNumber = %s', from_account) INTO person_type;
+            IF event_amount > balance AND person_type = 'CLIENT' THEN
+				RETURN;
+			END IF;
+				
                 
                 -- according to instructions, transactions will be executed for employees anywhere
-                UPDATE latest_balances SET amount = amount - event_amount WHERE accountNumber = from_account;
-                END IF;
-            END IF;
+				
+            UPDATE latest_balances SET amount = amount - event_amount WHERE accountNumber = from_account;
+            
         ------------------------------------
         ELSEIF type = 'interest_payment' THEN
             --update deposit
@@ -230,7 +235,7 @@ AS $BODY$
 		ELSE
 			RETURN;
         END IF;
-	RAISE NOTICE 'found!';
+
 		RETURN;
         ------------------------------------
     END;

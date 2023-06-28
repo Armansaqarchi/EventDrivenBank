@@ -13,6 +13,7 @@ def make_logger():
     logger = logging.getLogger(__name__)
     # creating console handler to change log format
     ch = logging.StreamHandler()
+    
     # creating arbitrary format
     formatter = logging.Formatter("%(asctime)s %(name)s %(levelname)s: %(message)s")
     ch.setFormatter(formatter)

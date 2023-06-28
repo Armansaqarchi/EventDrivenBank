@@ -153,6 +153,10 @@ class AppInput:
             nationalID = input("nationalID : ")
             birth_of_date = input("birth_of_date(in format yyyy-mm-dd) : ")
 
+
+            if len(account_number) != 16:
+                return
+
             print("choose type of user")
             type = self.get_input((("client", "employee")))
 
